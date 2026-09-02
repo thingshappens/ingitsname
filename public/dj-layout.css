@@ -1,0 +1,5 @@
+.mode-switch{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+@media(max-width:520px){
+  .mode-switch button{min-height:48px;padding:8px 4px;font-size:9px;letter-spacing:.06em}
+}

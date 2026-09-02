@@ -1,0 +1,9 @@
+/* Keep the product image visibly paired with the hero after the recovered
+   legacy stylesheet has loaded. */
+.hero{min-height:690px;padding:80px 8vw 100px;display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,500px);gap:clamp(40px,7vw,110px);align-items:center}
+.hero-copy>p:not(.eyebrow){max-width:470px;margin:38px 0 0;color:var(--muted);font-size:14px;line-height:1.75}
+.product-visual{display:block;position:relative;width:100%;transition:transform .35s ease,filter .35s ease;filter:drop-shadow(0 24px 60px rgba(0,0,0,.55))}
+.product-visual:after{content:"CLICK TO ENTER";position:absolute;right:16px;bottom:-24px;font:400 7px DM Mono;letter-spacing:.16em;color:var(--gold);opacity:.7}
+.product-visual:hover{transform:translateY(-5px);filter:drop-shadow(0 30px 75px rgba(199,165,101,.16))}
+.product-visual img{display:block;width:100%;height:auto}
+@media(max-width:850px){.hero{min-height:0;padding:70px 24px 85px;grid-template-columns:1fr;gap:52px}.product-visual{width:min(100%,520px);margin:0 auto}.scroll{display:none}}

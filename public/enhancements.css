@@ -1,0 +1,5 @@
+/*
+  Recovery bridge for the missing source asset. The original published
+  Atelier stylesheet is preserved in hsc-classic.css.
+*/
+@import url('/hsc-classic.css');
