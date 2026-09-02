@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "marketing:brief": "node scripts/marketing-brief.mjs"
+    "marketing:brief": "node scripts/marketing-brief.mjs",
+    "dispatch:brief": "node scripts/atelier-dispatch-brief.mjs"
   },
   "devDependencies": {
     "vite": "^7.3.6"

@@ -1,0 +1,39 @@
+{
+  "brand": "Haute Sound Couture — Atelier Dispatch",
+  "version": 1,
+  "videoTemplate": {
+    "format": "9:16",
+    "width": 1080,
+    "height": 1920,
+    "durationSeconds": 12,
+    "visualSystem": "HSC black, paper and gold; HSC logo; restrained typography",
+    "platforms": ["Instagram Reels", "TikTok", "YouTube Shorts"]
+  },
+  "contentTypes": {
+    "vocal_cut": {
+      "enabled": true,
+      "label": "Vocal Cuts",
+      "requiredFields": ["contentType", "name", "bpm", "character", "outputs"],
+      "videoSequence": ["HSC SAMPLE ATELIER", "ONE PHRASE. FOUR CUTS.", "{name} · {bpm} BPM", "{character}", "CREATE YOURS"]
+    },
+    "dj_tool": {
+      "enabled": false,
+      "label": "DJ Tools",
+      "requiredFields": ["contentType", "name", "bpm", "character", "outputs"],
+      "videoSequence": ["HSC SAMPLE ATELIER", "A TOOL WITH A CHARACTER.", "{name} · {bpm} BPM", "{character}", "CREATE YOURS"]
+    }
+  },
+  "items": [
+    {
+      "id": "vocal-cut-launch-01",
+      "status": "waiting-for-audio",
+      "contentType": "vocal_cut",
+      "name": "Dark Echo",
+      "bpm": 128,
+      "character": "low, nocturnal and commanding",
+      "outputs": ["Dark Echo", "Ethereal", "Phone Call", "Ghost Voice"],
+      "caption": "One phrase. Four vocal cuts. Made for the exact moment in your track.",
+      "cta": "Create yours at atelier.hautesoundcouture.com"
+    }
+  ]
+}

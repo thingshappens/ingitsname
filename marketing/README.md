@@ -10,6 +10,14 @@ Run `npm run marketing:brief` to produce the next ready-to-record content brief.
 
 No social account is connected and nothing is published automatically. Publishing, ads and direct messages need explicit account access and a separate approval step.
 
+## Atelier Dispatch v1
+
+`atelier-dispatch.json` is the content model and video-template contract for the product-led launch series. v1 enables only `vocal_cut`; it has one reusable HSC 1080 × 1920 template and requires a name, BPM, character and four output names for every item.
+
+`dj_tool` is deliberately reserved in the same model, with the same required fields and 9:16 template. It is disabled and has no interface, asset or publishing workflow in v1. Enabling DJ Tools later therefore means adding its approved content items and changing `enabled` to `true`, rather than redesigning the template or data flow.
+
+Run `npm run dispatch:brief` to produce the next ready Dispatch brief. It will not select a disabled content type or publish anything.
+
 ## Publishing rhythm
 
 Use one master 9:16 export on all three platforms. Publish two posts per week, three to four days apart. The first three queue items are ready while audio credits are unavailable; do not publish the launch items until each sound category has a real, verified demo.
