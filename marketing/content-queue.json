@@ -1,0 +1,74 @@
+{
+  "brand": "Haute Sound Couture — Sample Atelier",
+  "defaultCta": "Follow for the opening.",
+  "launchCta": "Create yours at atelier.hautesoundcouture.com",
+  "platforms": ["Instagram Reels", "TikTok", "YouTube Shorts"],
+  "items": [
+    {
+      "id": "atelier-introduction",
+      "phase": "pre-launch",
+      "format": "9:16 screen reel · 10–12 s",
+      "hook": "YOUR TRACK DESERVES ITS OWN VOICE.",
+      "frames": ["HSC SAMPLE ATELIER", "VOCALS · TRANSITION FX · DJ TOOLS", "MADE FOR ONE. MADE IN SECONDS.", "FOLLOW FOR THE OPENING."],
+      "caption": "Not another sample pack. A place to shape the exact sound your track is asking for. HSC Sample Atelier — opening soon.",
+      "hashtags": ["#musicproduction", "#producer", "#djtools", "#sounddesign"],
+      "asset": "screen-record hero and product image",
+      "status": "ready"
+    },
+    {
+      "id": "three-modes",
+      "phase": "pre-launch",
+      "format": "9:16 screen reel · 8–10 s",
+      "hook": "ONE IDEA. THREE WAYS TO SHAPE IT.",
+      "frames": ["VOCAL SAMPLE", "TRANSITION FX", "DJ TOOLS", "HSC SAMPLE ATELIER"],
+      "caption": "A phrase, a transition or a DJ tool — shape the direction before it reaches the track.",
+      "hashtags": ["#musicproducer", "#ableton", "#flstudio", "#electronicmusic"],
+      "asset": "click through the three Atelier modes",
+      "status": "ready"
+    },
+    {
+      "id": "your-own-voice",
+      "phase": "pre-launch",
+      "format": "9:16 screen reel · 10 s",
+      "hook": "MAKE IT YOURS FIRST.",
+      "frames": ["USE YOUR OWN VOICE", "RECORD A TAKE", "TAILOR THE PROCESSING", "48 kHz WAV"],
+      "caption": "Record a phrase, shape it for the track, and keep the character that only your own voice can bring.",
+      "hashtags": ["#vocals", "#musicproduction", "#sounddesign", "#producerlife"],
+      "asset": "recording panel and processing controls",
+      "status": "ready"
+    },
+    {
+      "id": "first-real-vocal",
+      "phase": "launch",
+      "format": "9:16 audio reel · 12–15 s",
+      "hook": "ONE PHRASE. FOUR CUTS.",
+      "frames": ["WRITE THE IDEA", "CHOOSE THE DELIVERY", "HEAR FOUR DIRECTIONS", "CREATE YOURS"],
+      "caption": "One idea, four usable vocal directions. Built for the exact moment in your track.",
+      "hashtags": ["#vocalproducer", "#musicproducer", "#sounddesign"],
+      "asset": "real generated vocal playback",
+      "status": "waiting-for-audio"
+    },
+    {
+      "id": "first-transition",
+      "phase": "launch",
+      "format": "9:16 audio reel · 8–12 s",
+      "hook": "THE SPACE BETWEEN TWO MOMENTS.",
+      "frames": ["DESCRIBE THE TRANSITION", "SHAPE THE CHARACTER", "DROP IT INTO THE TRACK", "CREATE YOURS"],
+      "caption": "Transitions should feel made for the track — not pasted over it.",
+      "hashtags": ["#transitionfx", "#edmproducer", "#sounddesign"],
+      "asset": "real transition FX playback",
+      "status": "waiting-for-audio"
+    },
+    {
+      "id": "first-dj-tool",
+      "phase": "launch",
+      "format": "9:16 audio reel · 8–12 s",
+      "hook": "A TOOL WITH A CHARACTER.",
+      "frames": ["PICK THE DJ TOOL", "CHOOSE THE CHARACTER", "MAKE THE MOMENT HIT", "CREATE YOURS"],
+      "caption": "A DJ tool should have a point of view. Give the moment a character.",
+      "hashtags": ["#dj", "#djtools", "#musicproduction"],
+      "asset": "real DJ tool playback",
+      "status": "waiting-for-audio"
+    }
+  ]
+}
