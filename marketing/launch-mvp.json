@@ -1,0 +1,72 @@
+{
+  "product": "HSC Sample Atelier",
+  "launchRule": "Launch is blocked until all four pillars are verified with a real successful output in production.",
+  "pillars": [
+    {
+      "id": "ai_vocal_cuts",
+      "label": "AI-generated Vocal Cuts",
+      "contentType": "vocal_cut",
+      "uiMode": "vocal",
+      "generationPath": "ElevenLabs text-to-speech → 48 kHz WAV → four HSC variations",
+      "acceptance": [
+        "A voice can be selected and generated from a phrase.",
+        "Four variations can be previewed.",
+        "Each variation exports as a 48 kHz WAV after the approved unlock path."
+      ],
+      "currentStatus": "partial",
+      "blocker": "Provider credits are exhausted; production output has not been re-verified."
+    },
+    {
+      "id": "hsc_curated_vocals",
+      "label": "Own recorded / curated HSC vocals",
+      "contentType": "hsc_vocal",
+      "uiMode": "vocal",
+      "generationPath": "Local microphone recording → HSC processing → four 48 kHz WAV variations",
+      "acceptance": [
+        "A user can record a take locally without uploading it.",
+        "The take can be processed into four variations.",
+        "The curated HSC vocal source and its usage rights are explicitly selected before launch."
+      ],
+      "currentStatus": "partial",
+      "blocker": "Local recording path exists, but no approved curated HSC vocal library or licensing decision is recorded."
+    },
+    {
+      "id": "transition_fx",
+      "label": "Transition FX",
+      "contentType": "transition_fx",
+      "uiMode": "fx",
+      "generationPath": "ElevenLabs sound generation → 48 kHz WAV → four HSC variations",
+      "acceptance": [
+        "A transition type and character can be selected.",
+        "A generated transition can be previewed.",
+        "Four variations export as 48 kHz WAV after the approved unlock path."
+      ],
+      "currentStatus": "partial",
+      "blocker": "Provider credits are exhausted; production output has not been re-verified."
+    },
+    {
+      "id": "dj_tools",
+      "label": "DJ Tools",
+      "contentType": "dj_tool",
+      "uiMode": "dj",
+      "generationPath": "ElevenLabs sound generation → 48 kHz WAV → four HSC variations",
+      "acceptance": [
+        "A DJ tool and character can be selected.",
+        "A generated DJ tool can be previewed.",
+        "Four variations export as 48 kHz WAV after the approved unlock path."
+      ],
+      "currentStatus": "partial",
+      "blocker": "Provider credits are exhausted; production output has not been re-verified."
+    }
+  ],
+  "sharedLaunchGates": [
+    "Production audio generation is tested successfully for AI vocals, Transition FX and DJ Tools.",
+    "The own-recording path is tested in a production browser and the curated-vocal decision is documented.",
+    "The approved payment/unlock path is tested without exposing secrets: successful payment unlocks all four WAV downloads.",
+    "One approved 9:16 HSC asset exists for each pillar before any launch scheduling begins."
+  ],
+  "publishing": {
+    "status": "not_authorized",
+    "rule": "Do not schedule or publish until the shared launch gates are complete and the owner explicitly approves the first post."
+  }
+}

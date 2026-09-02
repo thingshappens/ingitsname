@@ -10,11 +10,11 @@ Run `npm run marketing:brief` to produce the next ready-to-record content brief.
 
 No social account is connected and nothing is published automatically. Publishing, ads and direct messages need explicit account access and a separate approval step.
 
-## Atelier Dispatch v1
+## Atelier Dispatch and launch definition
 
-`atelier-dispatch.json` is the content model and video-template contract for the product-led launch series. v1 enables only `vocal_cut`; it has one reusable HSC 1080 × 1920 template and requires a name, BPM, character and four output names for every item.
+`launch-mvp.json` is the product acceptance contract. HSC Atelier is not launch-ready with Vocal Cuts alone: AI Vocal Cuts, own recorded/curated HSC vocals, Transition FX and DJ Tools are four equal launch pillars. Each needs a real production output and four 48 kHz WAV exports before launch scheduling begins.
 
-`dj_tool` is deliberately reserved in the same model, with the same required fields and 9:16 template. It is disabled and has no interface, asset or publishing workflow in v1. Enabling DJ Tools later therefore means adding its approved content items and changing `enabled` to `true`, rather than redesigning the template or data flow.
+`atelier-dispatch.json` remains the reusable content model and video-template contract. It holds `contentType`, name, BPM, character and four output names, with a consistent HSC 1080 × 1920 format. `dj_tool` is kept as a documented extension point; no Dispatch UI or publishing automation is introduced here.
 
 Run `npm run dispatch:brief` to produce the next ready Dispatch brief. It will not select a disabled content type or publish anything.
 
