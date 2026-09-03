@@ -258,6 +258,11 @@ $('#recordVoiceButton').addEventListener('click',async()=>{
 
 $('#generate').addEventListener('click',async()=>{
   const button=$('#generate');
+  if(sourceMode==='recorded'&&sourceBuffer){
+    renderVariations();
+    $('#status').textContent='Your recorded take was reprocessed with the current Atelier settings. No generation credits were used.';
+    return;
+  }
   const requestText=generationMode==='dj'?(phrase.value.trim()||`${$('#djTool').value} · ${$('#djCharacter').value}`):phrase.value.trim();
   if(!requestText){
     phrase.focus();
@@ -307,13 +312,13 @@ function effectValues(p){
 
 function renderVariations(){
   $('#empty').hidden=true;$('#variations').hidden=false;
-  const canDownload=isOwner||isPaid;
+  const canDownload=isOwner||isPaid||sourceMode==='recorded';
   $('#variations').innerHTML=presets.map((p,i)=>{const fx=effectValues(p),shownPitch=Math.round(fx.pitch*10)/10,shownEcho=Math.round(fx.echo),shownPhone=Math.round(fx.phone),shownCrush=Math.round(fx.bitcrush),shownReverb=Math.round(fx.reverb),shownGlitch=Math.round(fx.glitch),shownPulse=Math.round(fx.pulse),shownWidth=Math.round(fx.width);return `<article class="variation"><button class="play" data-i="${i}">▶</button><div><h3>${p.name}</h3><p>${formatPitch(shownPitch)} · ${shownEcho}% ECHO · ${shownPhone}% PHONE · ${shownCrush}% CRUSH · ${shownReverb}% REVERB · ${shownGlitch}% GLITCH · ${shownPulse}% PULSE · ${shownWidth}% WIDTH${fx.reverse?' · REVERSE':''} · ${$('#bpm').value} BPM</p></div><div class="wave">${Array.from({length:18},(_,n)=>`<i style="height:${7+((n*13+i*9)%21)}px"></i>`).join('')}</div><button class="dispatch-cut" data-i="${i}" ${sourceMode==='vocal'?'':'hidden'}>DISPATCH</button><button class="download" data-i="${i}" ${canDownload?'':'disabled'}>${isOwner?'DOWNLOAD WAV · OWNER ACCESS':paidViaPack?'DOWNLOAD WAV · PRODUCER PACK':isPaid?'DOWNLOAD WAV':'WAV · UNLOCK AFTER PAYMENT'}</button></article>`}).join('');
   document.querySelectorAll('.play').forEach(b=>b.addEventListener('click',()=>playVariation(Number(b.dataset.i),b)));
   document.querySelectorAll('.dispatch-cut').forEach(b=>b.addEventListener('click',()=>showDispatch(Number(b.dataset.i),b)));
   document.querySelectorAll('.download:not(:disabled)').forEach(b=>b.addEventListener('click',()=>downloadVariation(Number(b.dataset.i),b)));
   $('#checkout').disabled=canDownload;
-  $('#checkout').textContent=isOwner?'OWNER DOWNLOADS UNLOCKED':isPaid?'PURCHASE COMPLETE · WAVS UNLOCKED':'UNLOCK 4 WAV FILES · $9';
+  $('#checkout').textContent=sourceMode==='recorded'?'LOCAL VOICE · WAVS READY':isOwner?'OWNER DOWNLOADS UNLOCKED':isPaid?'PURCHASE COMPLETE · WAVS UNLOCKED':'UNLOCK 4 WAV FILES · $9';
   if(producerPackAvailable&&!isOwner&&packRemaining<=0)$('#packCheckout').textContent=packPurchaseLabel();
 }
 
@@ -560,7 +565,7 @@ function playVariation(index,button){
 }
 
 async function downloadVariation(index,button){
-  if(!sourceBuffer||(!isOwner&&!isPaid))return;
+  if(!sourceBuffer||(!isOwner&&!isPaid&&sourceMode!=='recorded'))return;
   const original=button.textContent;button.disabled=true;button.textContent='RENDERING WAV…';
   try{
     const p=presets[index],fx=effectValues(p),rate=Math.pow(2,fx.pitch/12);
