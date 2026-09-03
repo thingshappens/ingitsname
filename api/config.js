@@ -6,6 +6,7 @@ module.exports=async function(req,res){
   const producerPackCheckoutReady=Boolean(requested&&process.env.STRIPE_SECRET_KEY&&isCreditStoreConfigured());
   return res.status(200).json({
     producerPackEnabled:requested,
-    producerPackCheckoutReady
+    producerPackCheckoutReady,
+    generationAvailable:process.env.EXTERNAL_GENERATION_ENABLED!=='false'
   });
 };

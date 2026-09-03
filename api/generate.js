@@ -12,6 +12,7 @@ const pcm48ToWav=(pcm)=>{
 
 module.exports=async function(req,res){
   if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
+  if(process.env.EXTERNAL_GENERATION_ENABLED==='false')return res.status(503).json({error:'Generation temporarily unavailable'});
   if(!process.env.ELEVENLABS_API_KEY)return res.status(503).json({error:'Voice engine is not connected yet'});
   const {code,text,voiceId,delivery,mode,fxType,fxCharacter,fxDuration,promptInfluence,djTool,djCharacter,creditSessionId,generationRequestId}=req.body||{};
   const owner=isOwner(req,code);

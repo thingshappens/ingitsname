@@ -45,6 +45,7 @@ let packSessionId = localStorage.getItem('hscProducerPackSession');
 let packRemaining = 0;
 let producerPackAvailable = false;
 let producerPackCheckoutReady = false;
+let generationAvailable = true;
 const presets = [
   {name:'Clean Reference',factor:0,clean:true},
   {name:'Lightly Processed',factor:.5},
@@ -150,6 +151,16 @@ function updatePurchaseVisibility(){
   $('#producerPack').hidden=isOwner||localVoice||!producerPackAvailable;
 }
 
+function updateGenerationAvailability(){
+  const recordedReady=sourceMode==='recorded'&&sourceBuffer;
+  $('#generate').disabled=!generationAvailable&&!recordedReady;
+  if(!generationAvailable&&!recordedReady){
+    $('#generate span').textContent='GENERATION TEMPORARILY UNAVAILABLE';
+  }else{
+    $('#generate span').textContent=generationMode==='vocal'?'Generate four vocal cuts':generationMode==='fx'?'Generate four FX cuts':'Generate four DJ tools';
+  }
+}
+
 function setMode(mode){
   generationMode=mode;
   activeQuickStyle='custom';
@@ -158,7 +169,7 @@ function setMode(mode){
   $('#ideaTitle').textContent=mode==='vocal'?'The phrase':mode==='fx'?'The sound':'The direction';
   $('#designTitle').textContent=mode==='vocal'?'The performance':mode==='fx'?'The design':'The character';
   phrase.placeholder=mode==='vocal'?'Drop the bass':mode==='fx'?'Fast metallic swoosh':'Optional tag or direction';
-  $('#generate span').textContent=mode==='vocal'?'Generate four vocal cuts':mode==='fx'?'Generate four FX cuts':'Generate four DJ tools';
+  updateGenerationAvailability();
   $('#dispatch').hidden=true;
   renderQuickStyles();
   track('atelier_mode_selected',{mode});
@@ -176,8 +187,8 @@ async function loadVoices(code=''){
     isOwner=Boolean(data.owner);
     updatePurchaseVisibility();
     $('#voice').innerHTML=voices.slice(0,30).map(v=>`<option value="${v.voice_id}">${v.name}</option>`).join('');
-    $('#generate').disabled=false;
-    $('#status').textContent=isOwner?`${voices.length} voices available. Owner access: unlimited WAV downloads unlocked.`:`${voices.length} voices available. The Atelier is ready.`;
+    updateGenerationAvailability();
+    $('#status').textContent=!generationAvailable?'GENERATION TEMPORARILY UNAVAILABLE. Record Your Own Voice remains available for free processing and playback.':isOwner?`${voices.length} voices available. Owner access: unlimited WAV downloads unlocked.`:`${voices.length} voices available. The Atelier is ready.`;
     if(sourceBuffer)renderVariations();
   }catch(e){$('#status').textContent=e.message;}
 }
@@ -193,7 +204,10 @@ loadVoices();
 async function loadAtelierConfig(){
   try{
     const r=await fetch('/api/config',{cache:'no-store'}),data=await r.json();
-    if(!r.ok||!data.producerPackEnabled)return;
+    if(!r.ok)return;
+    generationAvailable=data.generationAvailable!==false;
+    updateGenerationAvailability();
+    if(!data.producerPackEnabled)return;
     producerPackAvailable=true;
     producerPackCheckoutReady=Boolean(data.producerPackCheckoutReady);
     updatePurchaseVisibility();
@@ -241,6 +255,7 @@ $('#recordVoiceButton').addEventListener('click',async()=>{
         sourceBuffer=await audioContext.decodeAudioData(bytes);
         sourceBuffer=await resampleTo48k(sourceBuffer);
         sourceMode='recorded';currentGenerationId=crypto.randomUUID();isPaid=false;paidViaPack=false;
+        updateGenerationAvailability();
         if(recordingUrl)URL.revokeObjectURL(recordingUrl);
         recordingUrl=URL.createObjectURL(blob);
         $('#recordingPreview').src=recordingUrl;$('#recordingPreview').hidden=false;
