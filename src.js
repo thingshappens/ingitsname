@@ -548,7 +548,10 @@ function connectPulseGate(context,input,output,amount,duration){
 function connectTreatment(context,src,p,destination){
   const fx=effectValues(p),envelope=context.createGain(),crushDry=context.createGain(),crushWet=context.createGain(),crusher=context.createWaveShaper(),crushBus=context.createGain(),dry=context.createGain(),phoneWet=context.createGain(),highpass=context.createBiquadFilter(),lowpass=context.createBiquadFilter(),bus=context.createGain(),pulseBus=context.createGain(),spatialBus=context.createGain(),delay=context.createDelay(3),feedback=context.createGain(),echoWet=context.createGain();
   const phoneControl=fx.phone/100,crushControl=fx.bitcrush/100;
-  const phoneAmount=phoneControl===0?0:Math.pow(phoneControl,.4),crushAmount=crushControl===0?0:Math.pow(crushControl,.4);
+  // The old low exponent made tiny values disproportionately strong: 5–8% of
+  // Bitcrush could become a 30% wet signal. Keep the deliberately destroyed
+  // settings characterful, but make the subtle end of the controls genuinely subtle.
+  const phoneAmount=phoneControl===0?0:Math.pow(phoneControl,1.15),crushAmount=crushControl===0?0:Math.pow(crushControl,1.25);
   src.playbackRate.value=Math.pow(2,fx.pitch/12);
   delay.delayTime.value=60/Number($('#bpm').value);
   feedback.gain.value=Math.min(.72,fx.echo/120);echoWet.gain.value=Math.min(.8,fx.echo/100);
@@ -556,7 +559,7 @@ function connectTreatment(context,src,p,destination){
   crushDry.gain.value=1-crushAmount;crushWet.gain.value=crushAmount;
   const bits=16-crushAmount*13,levels=Math.pow(2,bits-1),curve=new Float32Array(65536);
   for(let i=0;i<curve.length;i++){const x=i/(curve.length-1)*2-1;curve[i]=Math.round(x*levels)/levels;}
-  crusher.curve=curve;crusher.oversample='none';
+  crusher.curve=curve;crusher.oversample='4x';
   highpass.type='highpass';highpass.frequency.value=100+phoneAmount*900;
   lowpass.type='lowpass';lowpass.frequency.value=12000-phoneAmount*9500;
   const now=context.currentTime,sourceDuration=src.buffer.duration/src.playbackRate.value,fadeIn=Math.min(.006,sourceDuration/4),fadeOut=Math.min(.025,sourceDuration/4);
@@ -570,7 +573,13 @@ function connectTreatment(context,src,p,destination){
     convolver.buffer=createReverbImpulse(context,reverbAmount);reverbWet.gain.value=Math.min(.78,reverbAmount*.72);
     pulseBus.connect(convolver);convolver.connect(reverbWet);reverbWet.connect(spatialBus);
   }
-  connectWidth(context,spatialBus,destination,fx.width);
+  // Echo and convolution reverb can sum above 0 dBFS. A transparent final
+  // safety stage prevents the small digital crackles that clipping creates.
+  const outputGain=context.createGain(),limiter=context.createDynamicsCompressor();
+  outputGain.gain.value=.9;
+  limiter.threshold.value=-2.5;limiter.knee.value=5;limiter.ratio.value=12;limiter.attack.value=.003;limiter.release.value=.12;
+  outputGain.connect(limiter);limiter.connect(destination);
+  connectWidth(context,spatialBus,outputGain,fx.width);
   return {rate:src.playbackRate.value,fx};
 }
 
