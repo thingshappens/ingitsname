@@ -333,7 +333,7 @@ function effectValues(p){
 function renderVariations(){
   $('#empty').hidden=true;$('#variations').hidden=false;
   const canDownload=isOwner||isPaid;
-  $('#variations').innerHTML=presets.map((p,i)=>{const fx=effectValues(p),shownPitch=Math.round(fx.pitch*10)/10,shownEcho=Math.round(fx.echo),shownPhone=Math.round(fx.phone),shownCrush=Math.round(fx.bitcrush),shownReverb=Math.round(fx.reverb),shownGlitch=Math.round(fx.glitch),shownPulse=Math.round(fx.pulse),shownWidth=Math.round(fx.width);return `<article class="variation"><button class="play" data-i="${i}">▶</button><div><h3>${p.name}</h3><p>${formatPitch(shownPitch)} · ${shownEcho}% ECHO · ${shownPhone}% PHONE · ${shownCrush}% CRUSH · ${shownReverb}% REVERB · ${shownGlitch}% GLITCH · ${shownPulse}% PULSE · ${shownWidth}% WIDTH${fx.reverse?' · REVERSE':''} · ${$('#bpm').value} BPM</p></div><div class="wave">${Array.from({length:18},(_,n)=>`<i style="height:${7+((n*13+i*9)%21)}px"></i>`).join('')}</div><button class="dispatch-cut" data-i="${i}" ${sourceMode==='vocal'?'':'hidden'}>DISPATCH</button><button class="download" data-i="${i}" ${canDownload?'':'disabled'}>${isOwner?'DOWNLOAD WAV · OWNER ACCESS':paidViaPack?'DOWNLOAD WAV · PRODUCER PACK':isPaid?'DOWNLOAD WAV':'WAV · UNLOCK AFTER PAYMENT'}</button></article>`}).join('');
+  $('#variations').innerHTML=presets.map((p,i)=>{const fx=effectValues(p),shownPitch=Math.round(fx.pitch*10)/10,shownEcho=Math.round(fx.echo),shownPhone=Math.round(fx.phone),shownCrush=Math.round(fx.bitcrush),shownReverb=Math.round(fx.reverb),shownGlitch=Math.round(fx.glitch),shownPulse=Math.round(fx.pulse),shownWidth=Math.round(fx.width);return `<article class="variation"><button class="play" data-i="${i}">▶</button><div><h3>${p.name}</h3><p>${formatPitch(shownPitch)} · ${shownEcho}% ECHO · ${shownPhone}% PHONE · ${shownCrush}% CRUSH · ${shownReverb}% REVERB · ${shownGlitch}% GLITCH · ${shownPulse}% PULSE · ${shownWidth}% WIDTH${fx.reverse?' · REVERSE':''} · ${$('#bpm').value} BPM · 48 kHz WAV</p></div><div class="wave">${Array.from({length:18},(_,n)=>`<i style="height:${7+((n*13+i*9)%21)}px"></i>`).join('')}</div><button class="dispatch-cut" data-i="${i}" ${sourceMode==='vocal'?'':'hidden'}>DISPATCH</button><button class="download" data-i="${i}" ${canDownload?'':'disabled'}>${isOwner?'DOWNLOAD 48 kHz WAV · OWNER ACCESS':paidViaPack?'DOWNLOAD 48 kHz WAV · PRODUCER PACK':isPaid?'DOWNLOAD 48 kHz WAV':'48 kHz WAV · UNLOCK AFTER PAYMENT'}</button></article>`}).join('');
   document.querySelectorAll('.play').forEach(b=>b.addEventListener('click',()=>playVariation(Number(b.dataset.i),b)));
   document.querySelectorAll('.dispatch-cut').forEach(b=>b.addEventListener('click',()=>showDispatch(Number(b.dataset.i),b)));
   document.querySelectorAll('.download:not(:disabled)').forEach(b=>b.addEventListener('click',()=>downloadVariation(Number(b.dataset.i),b)));
@@ -357,7 +357,7 @@ async function showDispatch(index,button){
     if(dispatchAudioUrl)URL.revokeObjectURL(dispatchAudioUrl);
     dispatchAudioUrl=URL.createObjectURL(audioBufferToWav(rendered));
     const text=phrase.value.trim()||'Drop the bass',bpm=$('#bpm').value||128,style=p.name;
-    $('#dispatchPhrase').textContent=text.toUpperCase();$('#dispatchMeta').textContent=`${bpm} BPM · ${style.toUpperCase()}`;
+    $('#dispatchPhrase').textContent=text.toUpperCase();$('#dispatchMeta').textContent=`${bpm} BPM · ${style.toUpperCase()} · 48 kHz WAV`;
     $('#dispatchAudio').src=dispatchAudioUrl;
     $('#dispatchReels').textContent=`“${text}” · ${style}. Four vocal cuts. One idea. #HauteSoundCouture #Producer`;
     $('#dispatchTikTok').textContent=`Built in the Atelier: ${style} vocal cut at ${bpm} BPM.`;
@@ -599,7 +599,7 @@ async function downloadVariation(index,button){
     const rendered=await offline.startRendering(),blob=audioBufferToWav(rendered),url=URL.createObjectURL(blob),a=document.createElement('a');
     const phraseName=phrase.value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'hsc-vocal';
     a.href=url;a.download=`${phraseName}-${p.name.toLowerCase().replace(/\s+/g,'-')}.wav`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-    $('#status').textContent=`${p.name} downloaded as WAV.`;
+    $('#status').textContent=`${p.name} downloaded as a 48 kHz WAV.`;
   }catch(e){$('#status').textContent=`WAV export failed: ${e.message}`;}
   finally{button.disabled=false;button.textContent=original;}
 }
