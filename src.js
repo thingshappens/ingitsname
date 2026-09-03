@@ -134,7 +134,7 @@ function applyQuickStyle(key){
     $('#reverse').textContent=reverseEnabled?'ON':'OFF';
     applyingQuickStyle=false;
     track('quick_style_selected',{mode:generationMode,style:key});
-    $('#status').textContent=`${style.name} applied. Adjust anything to make it your own.`;
+    $('#status').textContent=generationAvailable?`${style.name} applied. Adjust anything to make it your own.`:'GENERATION TEMPORARILY UNAVAILABLE. Record Your Own Voice remains available for free processing and playback.';
   }
   renderQuickStyles();
   if(sourceBuffer)renderVariations();
