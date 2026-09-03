@@ -1,4 +1,9 @@
 import './style.css';
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Web Analytics
+inject();
+
 const djLayoutStyles=document.createElement('link');
 djLayoutStyles.rel='stylesheet';
 djLayoutStyles.href='/dj-layout.css';

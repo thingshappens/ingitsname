@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@upstash/redis": "^1.38.3",
+    "@vercel/analytics": "^2.0.1",
     "stripe": "^22.4.0"
   }
 }
