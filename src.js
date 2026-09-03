@@ -163,6 +163,9 @@ function updateGenerationAvailability(){
 
 function setMode(mode){
   generationMode=mode;
+  // A recorded take can only be regenerated from the Vocal mode. Switching to
+  // FX or DJ must always return Generate to the external-generation flow.
+  if(mode!=='vocal'&&sourceMode==='recorded')sourceMode=mode;
   activeQuickStyle='custom';
   document.querySelectorAll('.mode-switch button').forEach(button=>button.classList.toggle('active',button.dataset.mode===mode));
   $('#vocalFields').hidden=mode!=='vocal';$('#fxFields').hidden=mode!=='fx';$('#djFields').hidden=mode!=='dj';$('#recordVoice').hidden=mode!=='vocal';$('#phoneBlock').hidden=mode==='fx';
@@ -172,6 +175,8 @@ function setMode(mode){
   updateGenerationAvailability();
   $('#dispatch').hidden=true;
   renderQuickStyles();
+  updatePurchaseVisibility();
+  updateGenerationAvailability();
   track('atelier_mode_selected',{mode});
 }
 
