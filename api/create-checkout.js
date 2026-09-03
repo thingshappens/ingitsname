@@ -47,8 +47,8 @@ module.exports = async function (req, res) {
                 ? 'HSC Sample Atelier Producer Pack'
                 : 'HSC Sample Atelier Four Custom WAV Cuts',
               description: isPack
-                ? 'Five complete fittings. Twenty production-ready WAV files.'
-                : 'One complete fitting. Four production-ready WAV files.',
+                ? 'Five complete fittings. Twenty production-ready 48 kHz WAV files.'
+                : 'One complete fitting. Four production-ready 48 kHz WAV files.',
             },
           },
         },
