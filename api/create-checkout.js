@@ -27,6 +27,7 @@ module.exports = async function (req, res) {
     const stripe = requireStripe();
     const origin = originFromRequest(req);
     const isPack = plan === 'producer_pack';
+    const productImage = `${origin}/${isPack ? 'hsc-producer-pack.jpg' : 'hsc-four-cuts.jpg'}`;
 
     if (isPack && process.env.PRODUCER_PACK_ENABLED !== 'true') {
       return res.status(503).json({ error: 'Producer Pack is not available yet' });
@@ -51,6 +52,7 @@ module.exports = async function (req, res) {
               description: isPack
                 ? 'Five complete fittings. Twenty production-ready 48 kHz WAV files.'
                 : 'One complete fitting. Four production-ready 48 kHz WAV files.',
+              images: [productImage],
             },
           },
         },
