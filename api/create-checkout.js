@@ -34,6 +34,9 @@ module.exports = async function (req, res) {
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
+      // Atelier uses on-demand product data for each fitting. Keep Stripe's
+      // account-level Managed Payments flow from requiring a tax code here.
+      managed_payments: { enabled: false },
       allow_promotion_codes: true,
       line_items: [
         {
