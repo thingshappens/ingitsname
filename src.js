@@ -382,7 +382,7 @@ async function showDispatch(index,button){
     src.buffer=prepareSourceBuffer(offline,sourceBuffer,p);connectTreatment(offline,src,p,master);src.start();
     const rendered=await offline.startRendering();
     if(dispatchAudioUrl)URL.revokeObjectURL(dispatchAudioUrl);
-    dispatchAudioUrl=URL.createObjectURL(audioBufferToWav(rendered));
+    dispatchAudioUrl=URL.createObjectURL(audioBufferToWav(applyExportCeiling(rendered)));
     const text=phrase.value.trim()||'Drop the bass',bpm=$('#bpm').value||128,style=p.name;
     $('#dispatchPhrase').textContent=text.toUpperCase();$('#dispatchMeta').textContent=`${bpm} BPM · ${style.toUpperCase()} · 48 kHz WAV`;
     $('#dispatchAudio').src=dispatchAudioUrl;
@@ -576,6 +576,17 @@ function connectPulseGate(context,input,output,amount,duration){
   oscillator.stop(context.currentTime+duration+.1);
 }
 
+function connectMastering(context,input,destination){
+  // Shape the body first, then catch only the remaining transient peaks. Keeping
+  // these stages separate makes the compressor musical instead of asking it to
+  // do all of the brick-wall limiting work.
+  const compressor=context.createDynamicsCompressor(),limiter=context.createDynamicsCompressor();
+  compressor.threshold.value=-18;compressor.knee.value=12;compressor.ratio.value=3;compressor.attack.value=.012;compressor.release.value=.18;
+  limiter.threshold.value=-1;limiter.knee.value=0;limiter.ratio.value=20;limiter.attack.value=.001;limiter.release.value=.06;
+  input.connect(compressor);compressor.connect(limiter);limiter.connect(destination);
+  return {compressor,limiter};
+}
+
 function connectTreatment(context,src,p,destination){
   const fx=effectValues(p),envelope=context.createGain(),crushDry=context.createGain(),crushWet=context.createGain(),crusher=context.createWaveShaper(),crushBus=context.createGain(),dry=context.createGain(),phoneWet=context.createGain(),highpass=context.createBiquadFilter(),lowpass=context.createBiquadFilter(),bus=context.createGain(),pulseBus=context.createGain(),spatialBus=context.createGain(),delay=context.createDelay(3),feedback=context.createGain(),echoWet=context.createGain();
   const phoneControl=fx.phone/100,crushControl=fx.bitcrush/100;
@@ -604,12 +615,11 @@ function connectTreatment(context,src,p,destination){
     convolver.buffer=createReverbImpulse(context,reverbAmount);reverbWet.gain.value=Math.min(.78,reverbAmount*.72);
     pulseBus.connect(convolver);convolver.connect(reverbWet);reverbWet.connect(spatialBus);
   }
-  // Echo and convolution reverb can sum above 0 dBFS. A transparent final
-  // safety stage prevents the small digital crackles that clipping creates.
-  const outputGain=context.createGain(),limiter=context.createDynamicsCompressor();
+  // Echo and convolution reverb can sum above 0 dBFS. Leave headroom before
+  // the dedicated compressor/limiter master chain to prevent digital clipping.
+  const outputGain=context.createGain();
   outputGain.gain.value=.9;
-  limiter.threshold.value=-2.5;limiter.knee.value=5;limiter.ratio.value=12;limiter.attack.value=.003;limiter.release.value=.12;
-  outputGain.connect(limiter);limiter.connect(destination);
+  connectMastering(context,outputGain,destination);
   connectWidth(context,spatialBus,outputGain,fx.width);
   return {rate:src.playbackRate.value,fx};
 }
@@ -636,12 +646,27 @@ async function downloadVariation(index,button){
     const offline=new OfflineAudioContext(Math.max(2,sourceBuffer.numberOfChannels),Math.ceil(duration*sourceBuffer.sampleRate),sourceBuffer.sampleRate);
     const master=offline.createGain(),src=offline.createBufferSource();master.connect(offline.destination);master.gain.setValueAtTime(1,Math.max(0,duration-.04));master.gain.linearRampToValueAtTime(0,duration);
     src.buffer=prepareSourceBuffer(offline,sourceBuffer,p);connectTreatment(offline,src,p,master);src.start();
-    const rendered=await offline.startRendering(),blob=audioBufferToWav(rendered),url=URL.createObjectURL(blob),a=document.createElement('a');
+    const rendered=await offline.startRendering(),blob=audioBufferToWav(applyExportCeiling(rendered)),url=URL.createObjectURL(blob),a=document.createElement('a');
     const phraseName=phrase.value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||(generationMode==='vocal'&&$('#vocalType').value==='dj-tag'?'hsc-dj-tag':'hsc-vocal');
     a.href=url;a.download=`${phraseName}-${p.name.toLowerCase().replace(/\s+/g,'-')}.wav`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-    $('#status').textContent=`${p.name} downloaded as a 48 kHz WAV.`;
+    $('#status').textContent=`${p.name} downloaded as a 48 kHz WAV with a −1 dBFS ceiling.`;
   }catch(e){$('#status').textContent=`WAV export failed: ${e.message}`;}
   finally{button.disabled=false;button.textContent=original;}
+}
+
+function applyExportCeiling(buffer,ceilingDb=-1){
+  const ceiling=Math.pow(10,ceilingDb/20);let peak=0;
+  for(let channel=0;channel<buffer.numberOfChannels;channel++){
+    const data=buffer.getChannelData(channel);
+    for(let i=0;i<data.length;i++)peak=Math.max(peak,Math.abs(data[i]));
+  }
+  if(peak<=ceiling||peak===0)return buffer;
+  const gain=ceiling/peak;
+  for(let channel=0;channel<buffer.numberOfChannels;channel++){
+    const data=buffer.getChannelData(channel);
+    for(let i=0;i<data.length;i++)data[i]*=gain;
+  }
+  return buffer;
 }
 
 function audioBufferToWav(buffer){
