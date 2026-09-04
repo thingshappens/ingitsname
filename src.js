@@ -45,6 +45,7 @@ let packSessionId = localStorage.getItem('hscProducerPackSession');
 let packRemaining = 0;
 let producerPackAvailable = false;
 let producerPackCheckoutReady = false;
+let checkoutReady = true;
 let generationAvailable = true;
 const presets = [
   {name:'Clean Reference',factor:0,clean:true},
@@ -149,6 +150,10 @@ function updatePurchaseVisibility(){
   const localVoice=sourceMode==='recorded';
   $('.price').hidden=isOwner;
   $('#producerPack').hidden=isOwner||localVoice||!producerPackAvailable;
+  if(!isOwner&&!isPaid&&!checkoutReady){
+    $('#checkout').disabled=true;
+    $('#checkout').textContent='CHECKOUT TEMPORARILY UNAVAILABLE';
+  }
 }
 
 function updateGenerationAvailability(){
@@ -211,7 +216,9 @@ async function loadAtelierConfig(){
     const r=await fetch('/api/config',{cache:'no-store'}),data=await r.json();
     if(!r.ok)return;
     generationAvailable=data.generationAvailable!==false;
+    checkoutReady=data.checkoutReady!==false;
     updateGenerationAvailability();
+    updatePurchaseVisibility();
     if(!data.producerPackEnabled)return;
     producerPackAvailable=true;
     producerPackCheckoutReady=Boolean(data.producerPackCheckoutReady);
@@ -337,8 +344,8 @@ function renderVariations(){
   document.querySelectorAll('.play').forEach(b=>b.addEventListener('click',()=>playVariation(Number(b.dataset.i),b)));
   document.querySelectorAll('.dispatch-cut').forEach(b=>b.addEventListener('click',()=>showDispatch(Number(b.dataset.i),b)));
   document.querySelectorAll('.download:not(:disabled)').forEach(b=>b.addEventListener('click',()=>downloadVariation(Number(b.dataset.i),b)));
-  $('#checkout').disabled=canDownload;
-  $('#checkout').textContent=isOwner?'OWNER DOWNLOADS UNLOCKED':isPaid?'PURCHASE COMPLETE · WAVS UNLOCKED':'UNLOCK 4 WAV FILES · $9';
+  $('#checkout').disabled=canDownload||!checkoutReady;
+  $('#checkout').textContent=isOwner?'OWNER DOWNLOADS UNLOCKED':isPaid?'PURCHASE COMPLETE · WAVS UNLOCKED':checkoutReady?'UNLOCK 4 WAV FILES · $9':'CHECKOUT TEMPORARILY UNAVAILABLE';
   if(producerPackAvailable&&!isOwner&&packRemaining<=0)$('#packCheckout').textContent=packPurchaseLabel();
 }
 
@@ -435,6 +442,10 @@ $('#packCheckout').addEventListener('click',async()=>{
 
 $('#checkout').addEventListener('click',async()=>{
   if(isOwner||isPaid)return;
+  if(!checkoutReady){
+    $('#status').textContent='Checkout is temporarily unavailable while the secure payment connection is restored.';
+    return;
+  }
   if(!sourceBuffer){
     phrase.scrollIntoView({behavior:'smooth',block:'center'});
     phrase.focus();
