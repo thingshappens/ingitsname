@@ -576,15 +576,27 @@ function connectPulseGate(context,input,output,amount,duration){
   oscillator.stop(context.currentTime+duration+.1);
 }
 
+function createCeilingCurve(ceilingDb=-1){
+  const ceiling=Math.pow(10,ceilingDb/20),curve=new Float32Array(65536);
+  for(let i=0;i<curve.length;i++){
+    const sample=i/(curve.length-1)*2-1;
+    curve[i]=Math.max(-ceiling,Math.min(ceiling,sample));
+  }
+  return curve;
+}
+
 function connectMastering(context,input,destination){
   // Shape the body first, then catch only the remaining transient peaks. Keeping
   // these stages separate makes the compressor musical instead of asking it to
   // do all of the brick-wall limiting work.
-  const compressor=context.createDynamicsCompressor(),limiter=context.createDynamicsCompressor();
+  const compressor=context.createDynamicsCompressor(),limiter=context.createDynamicsCompressor(),ceiling=context.createWaveShaper();
   compressor.threshold.value=-18;compressor.knee.value=12;compressor.ratio.value=3;compressor.attack.value=.012;compressor.release.value=.18;
   limiter.threshold.value=-1;limiter.knee.value=0;limiter.ratio.value=20;limiter.attack.value=.001;limiter.release.value=.06;
-  input.connect(compressor);compressor.connect(limiter);limiter.connect(destination);
-  return {compressor,limiter};
+  // DynamicsCompressor is deliberately responsive rather than sample-accurate.
+  // This final ceiling catches any one-sample overshoot in previews and renders.
+  ceiling.curve=createCeilingCurve(-1);ceiling.oversample='4x';
+  input.connect(compressor);compressor.connect(limiter);limiter.connect(ceiling);ceiling.connect(destination);
+  return {compressor,limiter,ceiling};
 }
 
 function connectTreatment(context,src,p,destination){
