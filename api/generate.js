@@ -41,7 +41,10 @@ module.exports=async function(req,res){
     res.setHeader('content-type','audio/wav');res.setHeader('cache-control','no-store');return res.status(200).send(pcm48ToWav(pcm));
   };
   try{
-    if(mode==='fx'||mode==='dj'){
+    // DJ tags are spoken words, so even requests from an older cached client
+    // must use text-to-speech rather than the sound-effects endpoint.
+    const legacyDjTag=mode==='dj'&&String(djTool).trim().toLowerCase()==='dj tag';
+    if(mode==='fx'||(mode==='dj'&&!legacyDjTag)){
       const prompt=mode==='dj'
         ?`${djCharacter||'underground warehouse'} ${djTool||'DJ tool'} one-shot for a DJ set and music production. ${String(text).trim()}`
         :`${fxCharacter||'clean'} ${fxType||'swoosh'} transition sound effect for music production. ${String(text).trim()}`;

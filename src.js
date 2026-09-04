@@ -56,6 +56,7 @@ const presets = [
 const quickStyles = {
   vocal: [
     {key:'custom',name:'Custom'},
+    {key:'dj-tag',name:'DJ Tag',pitch:-1,echo:30,phone:0,bitcrush:8,reverb:66,glitch:0,pulse:10,width:88,reverse:false,delivery:'hype'},
     {key:'dark-echo',name:'Dark Echo',pitch:-5,echo:58,phone:0,bitcrush:0,reverb:30,glitch:0,pulse:0,width:62,reverse:false,delivery:'sinister'},
     {key:'ethereal',name:'Ethereal',pitch:3,echo:34,phone:0,bitcrush:0,reverb:76,glitch:0,pulse:12,width:86,reverse:false,delivery:'seductive'},
     {key:'phone-call',name:'Phone Call',pitch:-1,echo:14,phone:86,bitcrush:5,reverb:8,glitch:0,pulse:0,width:16,reverse:false,delivery:'commanding'},
@@ -77,8 +78,7 @@ const quickStyles = {
     {key:'warehouse-siren',name:'Warehouse Siren',pitch:-3,echo:38,phone:0,bitcrush:12,reverb:42,glitch:8,pulse:24,width:74,reverse:false,djTool:'siren',djCharacter:'underground warehouse'},
     {key:'mainstage-airhorn',name:'Mainstage Airhorn',pitch:0,echo:24,phone:0,bitcrush:4,reverb:32,glitch:0,pulse:18,width:92,reverse:false,djTool:'airhorn',djCharacter:'festival mainstage'},
     {key:'neon-laser',name:'Neon Laser',pitch:4,echo:54,phone:0,bitcrush:26,reverb:48,glitch:22,pulse:42,width:86,reverse:false,djTool:'laser',djCharacter:'neon rave'},
-    {key:'concrete-stab',name:'Concrete Stab',pitch:-5,echo:16,phone:0,bitcrush:38,reverb:22,glitch:14,pulse:68,width:58,reverse:false,djTool:'rave stab',djCharacter:'concrete basement'},
-    {key:'rooftop-tag',name:'Rooftop Tag',pitch:-1,echo:30,phone:0,bitcrush:8,reverb:66,glitch:0,pulse:10,width:88,reverse:false,djTool:'dj tag',djCharacter:'luxury rooftop'}
+    {key:'concrete-stab',name:'Concrete Stab',pitch:-5,echo:16,phone:0,bitcrush:38,reverb:22,glitch:14,pulse:68,width:58,reverse:false,djTool:'rave stab',djCharacter:'concrete basement'}
   ]
 };
 
@@ -162,9 +162,31 @@ function updateGenerationAvailability(){
   if(!generationAvailable&&!recordedReady){
     $('#generate span').textContent='GENERATION TEMPORARILY UNAVAILABLE';
   }else{
-    $('#generate span').textContent=generationMode==='vocal'?'Generate four vocal cuts':generationMode==='fx'?'Generate four FX cuts':'Generate four DJ tools';
+    $('#generate span').textContent=generationMode==='vocal'?($('#vocalType').value==='dj-tag'?'Generate four DJ tags':'Generate four vocal cuts'):generationMode==='fx'?'Generate four FX cuts':'Generate four DJ tools';
   }
 }
+
+function updateModeCopy(){
+  const djTag=generationMode==='vocal'&&$('#vocalType').value==='dj-tag';
+  $('#ideaTitle').textContent=djTag?'The DJ tag':generationMode==='vocal'?'The phrase':generationMode==='fx'?'The sound':'The direction';
+  $('#designTitle').textContent=djTag?'The voice':generationMode==='vocal'?'The performance':generationMode==='fx'?'The design':'The character';
+  phrase.placeholder=djTag?'DJ Mike':generationMode==='vocal'?'Drop the bass':generationMode==='fx'?'Fast metallic swoosh':'Optional direction';
+  updateGenerationAvailability();
+}
+
+$('#vocalType').addEventListener('change',e=>{
+  updateModeCopy();
+  $('#dispatch').hidden=true;
+  if(e.target.value==='dj-tag'){
+    applyQuickStyle('dj-tag');
+    $('#status').textContent='DJ Tag uses text-to-speech, so the exact name or phrase you enter will be spoken.';
+  }else{
+    activeQuickStyle='custom';
+    renderQuickStyles();
+    $('#status').textContent='Vocal Sample uses text-to-speech, so the words you enter will be spoken.';
+  }
+  track('vocal_type_selected',{type:e.target.value});
+});
 
 function setMode(mode){
   generationMode=mode;
@@ -174,10 +196,7 @@ function setMode(mode){
   activeQuickStyle='custom';
   document.querySelectorAll('.mode-switch button').forEach(button=>button.classList.toggle('active',button.dataset.mode===mode));
   $('#vocalFields').hidden=mode!=='vocal';$('#fxFields').hidden=mode!=='fx';$('#djFields').hidden=mode!=='dj';$('#recordVoice').hidden=mode!=='vocal';$('#phoneBlock').hidden=mode==='fx';
-  $('#ideaTitle').textContent=mode==='vocal'?'The phrase':mode==='fx'?'The sound':'The direction';
-  $('#designTitle').textContent=mode==='vocal'?'The performance':mode==='fx'?'The design':'The character';
-  phrase.placeholder=mode==='vocal'?'Drop the bass':mode==='fx'?'Fast metallic swoosh':'Optional tag or direction';
-  updateGenerationAvailability();
+  updateModeCopy();
   $('#dispatch').hidden=true;
   renderQuickStyles();
   updatePurchaseVisibility();
@@ -285,6 +304,7 @@ $('#recordVoiceButton').addEventListener('click',async()=>{
 
 $('#generate').addEventListener('click',async()=>{
   const button=$('#generate');
+  const djTag=generationMode==='vocal'&&$('#vocalType').value==='dj-tag';
   if(sourceMode==='recorded'&&sourceBuffer){
     renderVariations();
     $('#status').textContent='Your recorded take was reprocessed with the current Atelier settings. No generation credits were used.';
@@ -293,16 +313,16 @@ $('#generate').addEventListener('click',async()=>{
   const requestText=generationMode==='dj'?(phrase.value.trim()||`${$('#djTool').value} · ${$('#djCharacter').value}`):phrase.value.trim();
   if(!requestText){
     phrase.focus();
-    $('#status').textContent=generationMode==='vocal'?'Write the words you want the voice to say first.':'Describe the transition effect you want to create first.';
+    $('#status').textContent=djTag?'Write the DJ name or phrase you want the voice to say first.':generationMode==='vocal'?'Write the words you want the voice to say first.':'Describe the transition effect you want to create first.';
     return;
   }
-  button.disabled=true;button.querySelector('span').textContent=generationMode==='dj'?'Building the tool…':'Cutting the voice…';
-  $('#status').textContent=generationMode==='vocal'?'Generating the original performance.':generationMode==='fx'?'Generating the original transition effect.':'Generating the original DJ tool.';
+  button.disabled=true;button.querySelector('span').textContent=djTag?'Voicing the tag…':generationMode==='dj'?'Building the tool…':'Cutting the voice…';
+  $('#status').textContent=djTag?'Generating the DJ tag with text-to-speech.':generationMode==='vocal'?'Generating the original performance.':generationMode==='fx'?'Generating the original transition effect.':'Generating the original DJ tool.';
   try{
     const generationRequestId=crypto.randomUUID();
     const usingPack=Boolean(packSessionId&&packRemaining>0&&!isOwner);
     const r=await fetch('/api/generate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
-      code:$('#accessCode').value,text:requestText,mode:generationMode,voiceId:$('#voice').value,delivery:$('#delivery').value,
+      code:$('#accessCode').value,text:requestText,mode:generationMode,vocalType:$('#vocalType').value,voiceId:$('#voice').value,delivery:$('#delivery').value,
       fxType:$('#fxType').value,fxCharacter:$('#fxCharacter').value,fxDuration:$('#fxDuration').value,promptInfluence:$('#promptInfluence').value,
       djTool:$('#djTool').value,djCharacter:$('#djCharacter').value,
       ...(usingPack?{creditSessionId:packSessionId,generationRequestId}:{})
@@ -315,10 +335,10 @@ $('#generate').addEventListener('click',async()=>{
     if(paidViaPack){packRemaining=Number(r.headers.get('x-hsc-credit-remaining')||0);renderPackStatus();}
     sourceMode=generationMode;
     renderVariations();
-    track('sample_generated',{mode:generationMode,bpm:Number($('#bpm').value)});
-    $('#status').textContent=`Four ${generationMode==='vocal'?'vocal':generationMode==='fx'?'transition FX':'DJ tool'} cuts prepared.`;
+    track('sample_generated',{mode:generationMode,vocal_type:generationMode==='vocal'?$('#vocalType').value:undefined,bpm:Number($('#bpm').value)});
+    $('#status').textContent=`Four ${djTag?'DJ tag':generationMode==='vocal'?'vocal':generationMode==='fx'?'transition FX':'DJ tool'} cuts prepared.`;
   }catch(e){$('#status').textContent=e.message;}
-  finally{button.disabled=false;button.querySelector('span').textContent=generationMode==='vocal'?'Generate four vocal cuts':generationMode==='fx'?'Generate four FX cuts':'Generate four DJ tools';}
+  finally{button.disabled=false;updateGenerationAvailability();}
 });
 
 function effectValues(p){
@@ -617,7 +637,7 @@ async function downloadVariation(index,button){
     const master=offline.createGain(),src=offline.createBufferSource();master.connect(offline.destination);master.gain.setValueAtTime(1,Math.max(0,duration-.04));master.gain.linearRampToValueAtTime(0,duration);
     src.buffer=prepareSourceBuffer(offline,sourceBuffer,p);connectTreatment(offline,src,p,master);src.start();
     const rendered=await offline.startRendering(),blob=audioBufferToWav(rendered),url=URL.createObjectURL(blob),a=document.createElement('a');
-    const phraseName=phrase.value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'hsc-vocal';
+    const phraseName=phrase.value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||(generationMode==='vocal'&&$('#vocalType').value==='dj-tag'?'hsc-dj-tag':'hsc-vocal');
     a.href=url;a.download=`${phraseName}-${p.name.toLowerCase().replace(/\s+/g,'-')}.wav`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
     $('#status').textContent=`${p.name} downloaded as a 48 kHz WAV.`;
   }catch(e){$('#status').textContent=`WAV export failed: ${e.message}`;}
