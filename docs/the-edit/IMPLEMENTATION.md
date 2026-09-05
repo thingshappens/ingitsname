@@ -1,6 +1,6 @@
 # The Edit — candidate implementation
 
-Status: local implementation and automated service/audio checks. NOT production-ready. The live checkout/render/download sequence and human voice QA remain unverified. Keep THE_EDIT_ENABLED=false until preview credentials, rights and the full test chain are verified.
+Status: candidate deployed to a protected Vercel Preview, with automated service/audio checks. NOT production-ready. The live checkout/render/download sequence and human voice QA remain unverified. Keep THE_EDIT_ENABLED=false until preview credentials, rights and the full test chain are verified.
 
 ## Scope
 
@@ -48,13 +48,13 @@ The preview needs the existing voice-service credential and Redis access, plus a
 
 ## Remaining release gates and limitations
 
-1. Preview deployment plus credentials and accessible signed webhook endpoint.
+1. Preview deployment exists at https://hsc-deep-echo-qii7yqs24-mikaellarlek-gmailcoms-projects.vercel.app/edit/ (commit b2df58d). Page opened through normal authenticated browser access; deployed config endpoint returned 200, preview=true, enabled=false. Credentials and accessible signed webhook endpoint remain unconfigured.
 2. Real Stripe test purchases for both quantities; re-open success URL in another browser; download all WAVs and ZIP; verify unauthorized/unpaid/expired access is rejected; replay event concurrently and after completion.
 3. Human audition of every offered voice across all 9 style/configuration choices, short/long phrases and 110/128/140 BPM; run the same renderer on the deployed platform. Record approval in QA.csv. Do not claim BPM-synced/perfect/studio-ready in live copy until approved.
 4. Confirm current voice rights and commercial-use terms. No voices are published from an assumed license.
 5. Check Redis memory/bandwidth capacity against launch volume. Chunked private storage is deliberately simple for this small product; a larger launch needs capacity evidence or private object storage.
 6. Stripe webhook retries provide bounded recovery, not an indefinitely running queue worker. Pending/failed jobs require operational alerting and a defined refund/recovery policy before launch. Crash between a provider response and its storage checkpoint may repeat provider generation; saved cuts and successful deliveries are not repeated. Do not promise exactly-once provider calls across a process crash.
 7. The new page initializes the existing Google destination only on the production custom domain, with sanitized page location and no phrase/audio URL. Paid/render-ready events are structured server logs without order or customer details. Analytics delivery and live instrumentation verification remain outstanding. Existing instrumentation is preserved.
-8. Home page production responded 200 with the expected Google tag and current bundle; no live purchase was made. Tailor and old payment end-to-end smoke tests remain release gates.
+8. Home page production responded 200 with the expected Google tag and current bundle; its HTML was byte-for-byte identical before/after this work, and no live purchase was made. Tailor and old payment end-to-end smoke tests remain release gates.
 
 No production deployment, live prices, broad secret extraction, or production promotion was performed.
