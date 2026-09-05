@@ -19,7 +19,8 @@ function description(c){return sounds[c.style][0]+(c.style==='chopped_up'?` · $
 function remember(){try{sessionStorage.setItem(savedKey,JSON.stringify({phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:$('#bpm').value,cuts,request}));}catch{}}
 function identity(){return {requestId:crypto.randomUUID(),accessToken:Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('')};}
 let request=identity();
-function changed(){request=identity();remember();if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=undefined;}const player=$('#preview-player');player.pause();player.removeAttribute('src');player.hidden=true;$('#preview-feedback').textContent='Hear your phrase in the selected voice and first sound. Three short previews per hour.';summary();}
+function previewHint(){return config.preview?'Preview mode: 25 short finished-cut previews per hour.':'Hear the finished effect before checkout.';}
+function changed(){request=identity();remember();if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=undefined;}const player=$('#preview-player');player.pause();player.removeAttribute('src');player.hidden=true;$('#preview-feedback').textContent=previewHint();summary();}
 function summary(){
   const count=cuts.length,price=count===2?9:15;
   $('#summary').replaceChildren(...cuts.map(c=>{const li=document.createElement('li');li.textContent=description(c);return li;}));
@@ -29,13 +30,12 @@ function summary(){
   $('#checkout').textContent=`Get ${count} cuts — $${price} ↗`;
   const duplicate=new Set(cuts.map(key)).size!==count;
   $('#checkout').disabled=!config.enabled||busy||duplicate;
-  $('#preview').disabled=!config.enabled||previewBusy||!$('#phrase').value.trim()||!$('#voice').value;
   $('#feedback').textContent=duplicate?'Each cut needs its own sound or a different Chop combination.':!config.enabled?'Orders are not open yet. Explore your selection above.':'';
 }
 function draw(){
   $('#slots').replaceChildren(...cuts.map((c,i)=>{
     const section=document.createElement('section');section.className='slot';
-    section.innerHTML=`<div class="slot-top"><span>CUT 0${i+1}</span><span class="slot-symbol" aria-hidden="true">${sounds[c.style][2]}</span></div><label for="sound-${i}">Choose your sound</label><select id="sound-${i}">${Object.entries(sounds).map(([id,[name]])=>`<option value="${id}" ${c.style===id?'selected':''} ${id!=='chopped_up'&&cuts.some((other,j)=>j!==i&&other.style===id)?'disabled':''}>${name}</option>`).join('')}</select><p class="description">${sounds[c.style][1]}</p>`;
+    section.innerHTML=`<div class="slot-top"><span>CUT 0${i+1}</span><span class="slot-symbol" aria-hidden="true">${sounds[c.style][2]}</span></div><label for="sound-${i}">Choose your sound</label><select id="sound-${i}">${Object.entries(sounds).map(([id,[name]])=>`<option value="${id}" ${c.style===id?'selected':''} ${id!=='chopped_up'&&cuts.some((other,j)=>j!==i&&other.style===id)?'disabled':''}>${name}</option>`).join('')}</select><p class="description">${sounds[c.style][1]}</p><button class="preview-cut" type="button" ${!config.enabled||previewBusy?'disabled':''}>Preview this cut ↗</button>`;
     section.querySelector('select').addEventListener('change',e=>{
       cuts[i]={style:e.target.value};
       if(cuts[i].style==='chopped_up'){
@@ -54,6 +54,7 @@ function draw(){
       }
       section.append(options);
     }
+    section.querySelector('.preview-cut').onclick=()=>preview(c,section.querySelector('.preview-cut'));
     return section;
   }));
   $('#upgrade').hidden=cuts.length===4;$('#downgrade').hidden=cuts.length===2;summary();
@@ -62,18 +63,18 @@ $('#upgrade').onclick=()=>{for(const style of ['sexy_robot','chopped_up','clean'
 $('#downgrade').onclick=()=>{cuts=cuts.slice(0,2);changed();draw();$('#upgrade').focus();};
 for(const id of ['phrase','voice','bpm'])$(`#${id}`).addEventListener('input',()=>{$('#count').textContent=`${$('#phrase').value.length} / 120`;changed();});
 async function api(action,body){const r=await fetch(`/api/the-edit?action=${action}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Please try again.');}return r;}
-$('#preview').onclick=async()=>{
-  if(previewBusy||!config.enabled)return;
-  previewBusy=true;summary();
+async function preview(cut,button){
+  if(previewBusy||!config.enabled||!$('#phrase').value.trim()||!$('#voice').value){$('#preview-feedback').textContent='Write a phrase and choose a voice first.';return;}
+  previewBusy=true;button.disabled=true;
   const feedback=$('#preview-feedback'),player=$('#preview-player');feedback.textContent='Preparing your short preview…';player.hidden=true;
   try{
-    const r=await api('preview',{phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value),cut:cuts[0]});
+    const r=await api('preview',{phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value),cut});
     if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=URL.createObjectURL(await r.blob());player.src=previewUrl;player.hidden=false;await player.play();
-    feedback.textContent=`Previewing ${description(cuts[0])}.`;
-    event('the_edit_preview_played',{style:cuts[0].style});
+    feedback.textContent=`Previewing ${description(cut)}.`;
+    event('the_edit_preview_played',{style:cut.style});
   }catch(error){feedback.textContent=error.message;}
-  finally{previewBusy=false;summary();}
-};
+  finally{previewBusy=false;button.disabled=false;}
+}
 $('#editor').onsubmit=async e=>{e.preventDefault();if(busy||!config.enabled)return;busy=true;summary();remember();try{const result=await(await api('checkout',{...request,phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value),cuts})).json();if(!result.url){location.assign(`/edit/?order=${encodeURIComponent(result.orderId)}#access=${request.accessToken}`);return;}event('the_edit_checkout_started',{cut_count:cuts.length});location.assign(result.url);}catch(error){busy=false;summary();$('#feedback').textContent=error.message;}};
 let pollTimer,orderData,orderAuth;
 async function download(cutId){
@@ -113,7 +114,8 @@ async function init(){
     $('#availability').textContent=config.enabled?(config.preview?'PREVIEW · Stripe test mode. No live orders.':''):config.message;
     $('#voice').replaceChildren(new Option(config.voices.length?'Choose your voice':'Voices are being curated',''),...config.voices.map(v=>new Option(v.name,v.id)));
     const saved=JSON.parse(sessionStorage.getItem(savedKey)||'null');if(saved?.voiceId)$('#voice').value=saved.voiceId;
+    draw();
   }catch{$('#availability').textContent='The Edit is being prepared. Orders are not open yet.';$('#voice').replaceChildren(new Option('Voices are being curated',''));}
-  summary();event('the_edit_viewed');event('the_edit_full_upgrade_shown');
+  $('#preview-feedback').textContent=previewHint();summary();event('the_edit_viewed');event('the_edit_full_upgrade_shown');
 }
 init();

@@ -22,7 +22,8 @@ module.exports=async function(req,res){
       if(!voice)throw new InputError('Choose an available voice.');
       if(!Number.isInteger(bpm)||bpm<60||bpm>200)throw new InputError('Choose a whole BPM from 60 to 200.');
       if(!cut||!Object.hasOwn(STYLES,cut.style)||((cut.style==='chopped_up')&&(!['straight','triplet','double'].includes(cut.groove)||!['half','small'].includes(cut.cutAmount))))throw new InputError('Choose a sound to preview.');
-      if(!await store.previewRateLimit(ip))return res.status(429).json({error:'You have used the three short previews available this hour. Please come back shortly.'});
+      const previewLimit=process.env.VERCEL_ENV==='production'?3:25;
+      if(!await store.previewRateLimit(ip,previewLimit))return res.status(429).json({error:`You have used the ${previewLimit} short previews available this hour. Please come back shortly.`});
       const order={phrase:phrase.trim(),voiceId:voice.id,voiceRange:voice.range,bpm};
       const previewCut={style:cut.style,...(cut.style==='chopped_up'?{groove:cut.groove,cutAmount:cut.cutAmount}:{}),recipeVersion:VERSION};
       const pcm=await rendering.generate(order);
