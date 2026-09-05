@@ -4,7 +4,7 @@ const voice={id:'abcdefgh12345',name:'Test voice',range:'mid',licensed:true};pro
 const input=()=>({phrase:'Make the room move.',voiceId:voice.id,bpm:128,cuts:[{style:'clean'},{style:'dark_echo'}]});
 test('server rejects duplicates, unsupported options, unavailable voice and price-count spoofing',()=>{
   assert.equal(model.validate({...input(),price:1,cutCount:4}).cutCount,2);
-  assert.equal(model.validate(input()).delivery,'seductive');
+  assert.equal(model.validate(input()).delivery,'dark');
   for(const change of [{cuts:[{style:'clean'},{style:'clean'}]},{cuts:[{style:'clean',groove:'straight'},{style:'dark_echo'}]},{bpm:59},{bpm:128.5},{phrase:' '},{phrase:'a'.repeat(121)},{voiceId:'unknown'},{delivery:'anything-goes'}])assert.throws(()=>model.validate({...input(),...change}),model.InputError);
   assert.throws(()=>model.validate(input(),[]));
 });

@@ -103,7 +103,7 @@ async function poll(){
 }
 $('#refresh-order').onclick=poll;
 async function init(){
-  try{const saved=JSON.parse(sessionStorage.getItem(savedKey)||'null');if(saved&&Array.isArray(saved.cuts)&&[2,4].includes(saved.cuts.length)&&saved.cuts.every(c=>Object.hasOwn(sounds,c.style)&&(c.style!=='chopped_up'||(Object.hasOwn(grooves,c.groove)&&Object.hasOwn(amounts,c.cutAmount))))){cuts=saved.cuts;$('#phrase').value=String(saved.phrase||'').slice(0,120);$('#delivery').value=['seductive','hyped'].includes(saved.delivery)?saved.delivery:'seductive';$('#bpm').value=saved.bpm||128;if(saved.request)request=saved.request;}}
+  try{const saved=JSON.parse(sessionStorage.getItem(savedKey)||'null');if(saved&&Array.isArray(saved.cuts)&&[2,4].includes(saved.cuts.length)&&saved.cuts.every(c=>Object.hasOwn(sounds,c.style)&&(c.style!=='chopped_up'||(Object.hasOwn(grooves,c.groove)&&Object.hasOwn(amounts,c.cutAmount))))){cuts=saved.cuts;$('#phrase').value=String(saved.phrase||'').slice(0,120);$('#delivery').value=['dark','hyped'].includes(saved.delivery)?saved.delivery:'dark';$('#bpm').value=saved.bpm||128;if(saved.request)request=saved.request;}}
   catch{}
   draw();$('#count').textContent=`${$('#phrase').value.length} / 120`;
   const params=new URLSearchParams(location.search),access=new URLSearchParams(location.hash.slice(1)).get('access');
