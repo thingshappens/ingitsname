@@ -24,7 +24,7 @@ module.exports=async function(req,res){
       if(!cut||!Object.hasOwn(STYLES,cut.style)||cut.groove!==undefined||cut.cutAmount!==undefined)throw new InputError('Choose a sound to preview.');
       const previewLimit=process.env.VERCEL_ENV==='production'?12:100;
       if(!await store.previewRateLimit(ip,previewLimit))return res.status(429).json({error:`You have used the ${previewLimit} short previews available this hour. Please come back shortly.`});
-      const order={phrase:phrase.trim(),voiceId:voice.id,voiceRange:voice.range,delivery:'dark',bpm};
+      const order={phrase:phrase.trim(),voiceId:voice.id,voiceRange:voice.range,voiceProfile:voice.voiceProfile,delivery:'dark',bpm};
       const previewCut={style:cut.style,recipeVersion:VERSION};
       const pcm=await rendering.generate(order);
       const audio=await rendering.render(pcm,previewCut,order);
