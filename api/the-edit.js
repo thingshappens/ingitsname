@@ -1,5 +1,5 @@
 const {settings,createService}=require('../lib/edit/service');
-const {voices,InputError,STYLES,VERSION,filename}=require('../lib/edit/model');
+const {voices,InputError,STYLES,DELIVERIES,VERSION,filename}=require('../lib/edit/model');
 const store=require('../lib/edit/store');
 const rendering=require('../lib/edit/render');
 const service=createService();
@@ -16,15 +16,16 @@ module.exports=async function(req,res){
       const config=settings();
       if(req.headers.origin!==config.origin)return res.status(403).json({error:'Invalid origin'});
       const ip=String(req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0];
-      const {phrase,voiceId,bpm,cut}=req.body||{};
+      const {phrase,voiceId,delivery,bpm,cut}=req.body||{};
       const voice=voices().find(item=>item.id===voiceId);
       if(typeof phrase!=='string'||!phrase.trim()||phrase.trim().length>64||/[\x00-\x08\x0b-\x1f]/.test(phrase))throw new InputError('Write a short phrase of up to 64 characters to preview it.');
       if(!voice)throw new InputError('Choose an available voice.');
+      if(!Object.hasOwn(DELIVERIES,delivery))throw new InputError('Choose a voice mood.');
       if(!Number.isInteger(bpm)||bpm<60||bpm>200)throw new InputError('Choose a whole BPM from 60 to 200.');
       if(!cut||!Object.hasOwn(STYLES,cut.style)||((cut.style==='chopped_up')&&(!['straight','triplet','double'].includes(cut.groove)||!['half','small'].includes(cut.cutAmount))))throw new InputError('Choose a sound to preview.');
       const previewLimit=process.env.VERCEL_ENV==='production'?12:100;
       if(!await store.previewRateLimit(ip,previewLimit))return res.status(429).json({error:`You have used the ${previewLimit} short previews available this hour. Please come back shortly.`});
-      const order={phrase:phrase.trim(),voiceId:voice.id,voiceRange:voice.range,bpm};
+      const order={phrase:phrase.trim(),voiceId:voice.id,voiceRange:voice.range,delivery,bpm};
       const previewCut={style:cut.style,...(cut.style==='chopped_up'?{groove:cut.groove,cutAmount:cut.cutAmount}:{}),recipeVersion:VERSION};
       const pcm=await rendering.generate(order);
       const audio=await rendering.render(pcm,previewCut,order);

@@ -4,7 +4,8 @@ const voice={id:'abcdefgh12345',name:'Test voice',range:'mid',licensed:true};pro
 const input=()=>({phrase:'Make the room move.',voiceId:voice.id,bpm:128,cuts:[{style:'clean'},{style:'dark_echo'}]});
 test('server rejects duplicates, unsupported options, unavailable voice and price-count spoofing',()=>{
   assert.equal(model.validate({...input(),price:1,cutCount:4}).cutCount,2);
-  for(const change of [{cuts:[{style:'clean'},{style:'clean'}]},{cuts:[{style:'clean',groove:'straight'},{style:'dark_echo'}]},{bpm:59},{bpm:128.5},{phrase:' '},{phrase:'a'.repeat(121)},{voiceId:'unknown'}])assert.throws(()=>model.validate({...input(),...change}),model.InputError);
+  assert.equal(model.validate(input()).delivery,'seductive');
+  for(const change of [{cuts:[{style:'clean'},{style:'clean'}]},{cuts:[{style:'clean',groove:'straight'},{style:'dark_echo'}]},{bpm:59},{bpm:128.5},{phrase:' '},{phrase:'a'.repeat(121)},{voiceId:'unknown'},{delivery:'anything-goes'}])assert.throws(()=>model.validate({...input(),...change}),model.InputError);
   assert.throws(()=>model.validate(input(),[]));
 });
 test('all six Chop choices have unique keys and filenames',()=>{const variants=model.GROOVES.flatMap(groove=>model.AMOUNTS.map(cutAmount=>({style:'chopped_up',groove,cutAmount})));assert.equal(new Set(variants.map(model.cutKey)).size,6);assert.equal(new Set(variants.map(c=>model.filename(c,128))).size,6);assert.equal(model.validate({...input(),cuts:variants.slice(0,4)}).cuts.length,4);});

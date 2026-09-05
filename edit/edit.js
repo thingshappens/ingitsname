@@ -16,7 +16,7 @@ const savedKey='hsc-the-edit-draft';
 function event(name,props={}){window.gtag?.('event',name,props);}
 function key(c){return c.style==='chopped_up'?`${c.style}:${c.groove}:${c.cutAmount}`:c.style;}
 function description(c){return sounds[c.style][0]+(c.style==='chopped_up'?` · ${grooves[c.groove]} · ${amounts[c.cutAmount]}`:'');}
-function remember(){try{sessionStorage.setItem(savedKey,JSON.stringify({phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:$('#bpm').value,cuts,request}));}catch{}}
+function remember(){try{sessionStorage.setItem(savedKey,JSON.stringify({phrase:$('#phrase').value,voiceId:$('#voice').value,delivery:$('#delivery').value,bpm:$('#bpm').value,cuts,request}));}catch{}}
 function identity(){return {requestId:crypto.randomUUID(),accessToken:Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('')};}
 let request=identity();
 function previewHint(){return config.preview?'Preview mode: 100 short finished-cut previews per hour.':'Hear the finished effect before checkout.';}
@@ -61,21 +61,21 @@ function draw(){
 }
 $('#upgrade').onclick=()=>{for(const style of ['sexy_robot','chopped_up','clean','dark_echo']){if(cuts.length===4)break;if(!cuts.some(c=>c.style===style))cuts.push(style==='chopped_up'?{style,groove:'straight',cutAmount:'half'}:{style});}while(cuts.length<4){const variant=Object.keys(grooves).flatMap(groove=>Object.keys(amounts).map(cutAmount=>({style:'chopped_up',groove,cutAmount}))).find(c=>!cuts.some(x=>key(x)===key(c)));cuts.push(variant);}event('the_edit_full_upgrade_accepted');changed();draw();$('#sound-2').focus();};
 $('#downgrade').onclick=()=>{cuts=cuts.slice(0,2);changed();draw();$('#upgrade').focus();};
-for(const id of ['phrase','voice','bpm'])$(`#${id}`).addEventListener('input',()=>{$('#count').textContent=`${$('#phrase').value.length} / 120`;changed();});
+for(const id of ['phrase','voice','delivery','bpm'])$(`#${id}`).addEventListener('input',()=>{$('#count').textContent=`${$('#phrase').value.length} / 120`;changed();});
 async function api(action,body){const r=await fetch(`/api/the-edit?action=${action}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Please try again.');}return r;}
 async function preview(cut,button){
   if(previewBusy||!config.enabled||!$('#phrase').value.trim()||!$('#voice').value){$('#preview-feedback').textContent='Write a phrase and choose a voice first.';return;}
   previewBusy=true;button.disabled=true;
   const feedback=$('#preview-feedback'),player=$('#preview-player');feedback.textContent='Preparing your short preview…';player.hidden=true;
   try{
-    const r=await api('preview',{phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value),cut});
+    const r=await api('preview',{phrase:$('#phrase').value,voiceId:$('#voice').value,delivery:$('#delivery').value,bpm:Number($('#bpm').value),cut});
     if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=URL.createObjectURL(await r.blob());player.src=previewUrl;player.hidden=false;await player.play();
     feedback.textContent=`Previewing ${description(cut)}.`;
     event('the_edit_preview_played',{style:cut.style});
   }catch(error){feedback.textContent=error.message;}
   finally{previewBusy=false;button.disabled=false;}
 }
-$('#editor').onsubmit=async e=>{e.preventDefault();if(busy||!config.enabled)return;busy=true;summary();remember();try{const result=await(await api('checkout',{...request,phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value),cuts})).json();if(!result.url){location.assign(`/edit/?order=${encodeURIComponent(result.orderId)}#access=${request.accessToken}`);return;}event('the_edit_checkout_started',{cut_count:cuts.length});location.assign(result.url);}catch(error){busy=false;summary();$('#feedback').textContent=error.message;}};
+$('#editor').onsubmit=async e=>{e.preventDefault();if(busy||!config.enabled)return;busy=true;summary();remember();try{const result=await(await api('checkout',{...request,phrase:$('#phrase').value,voiceId:$('#voice').value,delivery:$('#delivery').value,bpm:Number($('#bpm').value),cuts})).json();if(!result.url){location.assign(`/edit/?order=${encodeURIComponent(result.orderId)}#access=${request.accessToken}`);return;}event('the_edit_checkout_started',{cut_count:cuts.length});location.assign(result.url);}catch(error){busy=false;summary();$('#feedback').textContent=error.message;}};
 let pollTimer,orderData,orderAuth;
 async function download(cutId){
   const status=$('#order-state');try{
@@ -103,7 +103,7 @@ async function poll(){
 }
 $('#refresh-order').onclick=poll;
 async function init(){
-  try{const saved=JSON.parse(sessionStorage.getItem(savedKey)||'null');if(saved&&Array.isArray(saved.cuts)&&[2,4].includes(saved.cuts.length)&&saved.cuts.every(c=>Object.hasOwn(sounds,c.style)&&(c.style!=='chopped_up'||(Object.hasOwn(grooves,c.groove)&&Object.hasOwn(amounts,c.cutAmount))))){cuts=saved.cuts;$('#phrase').value=String(saved.phrase||'').slice(0,120);$('#bpm').value=saved.bpm||128;if(saved.request)request=saved.request;}}
+  try{const saved=JSON.parse(sessionStorage.getItem(savedKey)||'null');if(saved&&Array.isArray(saved.cuts)&&[2,4].includes(saved.cuts.length)&&saved.cuts.every(c=>Object.hasOwn(sounds,c.style)&&(c.style!=='chopped_up'||(Object.hasOwn(grooves,c.groove)&&Object.hasOwn(amounts,c.cutAmount))))){cuts=saved.cuts;$('#phrase').value=String(saved.phrase||'').slice(0,120);$('#delivery').value=['seductive','hyped'].includes(saved.delivery)?saved.delivery:'seductive';$('#bpm').value=saved.bpm||128;if(saved.request)request=saved.request;}}
   catch{}
   draw();$('#count').textContent=`${$('#phrase').value.length} / 120`;
   const params=new URLSearchParams(location.search),access=new URLSearchParams(location.hash.slice(1)).get('access');
