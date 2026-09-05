@@ -1,7 +1,7 @@
 import {zipSync} from 'fflate';
 const $=s=>document.querySelector(s);
 // Keep order tokens and customer phrases out of automatic page context.
-if(location.hostname==='atelier.hautesoundcouture.com'){
+if(['atelier.hautesoundcouture.com','theedit.hautesoundcouture.com'].includes(location.hostname)){
   window.dataLayer=window.dataLayer||[];
   window.gtag=function(){window.dataLayer.push(arguments);};
   window.gtag('js',new Date());
