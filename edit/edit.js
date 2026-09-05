@@ -11,7 +11,7 @@ if(['atelier.hautesoundcouture.com','theedit.hautesoundcouture.com'].includes(lo
 }
 const sounds={clean:['Clean As Fuck','Clean spoken vocal with just enough reverb to feel finished.','○'],dark_echo:['Dark & Echo','Low-pitched vocal with controlled echo.','◑'],sexy_robot:['Sexy Robot','Synthetic, glitchy, raspy vocal.','⌁'],chopped_up:['Chopped Up','Your phrase, cut into a steady vocal rhythm.','≋']};
 const grooves={straight:'Straight Beat',triplet:'Groovy Triplet',double:'Double Chop'},amounts={half:'Half Chopped',small:'Small Cuts'};
-let cuts=[{style:'clean'},{style:'dark_echo'}],config={enabled:false},busy=false;
+let cuts=[{style:'clean'},{style:'dark_echo'}],config={enabled:false},busy=false,previewBusy=false,previewUrl;
 const savedKey='hsc-the-edit-draft';
 function event(name,props={}){window.gtag?.('event',name,props);}
 function key(c){return c.style==='chopped_up'?`${c.style}:${c.groove}:${c.cutAmount}`:c.style;}
@@ -19,7 +19,7 @@ function description(c){return sounds[c.style][0]+(c.style==='chopped_up'?` · $
 function remember(){try{sessionStorage.setItem(savedKey,JSON.stringify({phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:$('#bpm').value,cuts,request}));}catch{}}
 function identity(){return {requestId:crypto.randomUUID(),accessToken:Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('')};}
 let request=identity();
-function changed(){request=identity();remember();summary();}
+function changed(){request=identity();remember();if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=undefined;}const player=$('#preview-player');player.pause();player.removeAttribute('src');player.hidden=true;$('#preview-feedback').textContent='Hear your phrase in the selected voice and first sound. Three short previews per hour.';summary();}
 function summary(){
   const count=cuts.length,price=count===2?9:15;
   $('#summary').replaceChildren(...cuts.map(c=>{const li=document.createElement('li');li.textContent=description(c);return li;}));
@@ -29,6 +29,7 @@ function summary(){
   $('#checkout').textContent=`Get ${count} cuts — $${price} ↗`;
   const duplicate=new Set(cuts.map(key)).size!==count;
   $('#checkout').disabled=!config.enabled||busy||duplicate;
+  $('#preview').disabled=!config.enabled||previewBusy||!$('#phrase').value.trim()||!$('#voice').value;
   $('#feedback').textContent=duplicate?'Each cut needs its own sound or a different Chop combination.':!config.enabled?'Orders are not open yet. Explore your selection above.':'';
 }
 function draw(){
@@ -61,6 +62,18 @@ $('#upgrade').onclick=()=>{for(const style of ['sexy_robot','chopped_up','clean'
 $('#downgrade').onclick=()=>{cuts=cuts.slice(0,2);changed();draw();$('#upgrade').focus();};
 for(const id of ['phrase','voice','bpm'])$(`#${id}`).addEventListener('input',()=>{$('#count').textContent=`${$('#phrase').value.length} / 120`;changed();});
 async function api(action,body){const r=await fetch(`/api/the-edit?action=${action}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Please try again.');}return r;}
+$('#preview').onclick=async()=>{
+  if(previewBusy||!config.enabled)return;
+  previewBusy=true;summary();
+  const feedback=$('#preview-feedback'),player=$('#preview-player');feedback.textContent='Preparing your short preview…';player.hidden=true;
+  try{
+    const r=await api('preview',{phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value),cut:cuts[0]});
+    if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=URL.createObjectURL(await r.blob());player.src=previewUrl;player.hidden=false;await player.play();
+    feedback.textContent=`Previewing ${description(cuts[0])}.`;
+    event('the_edit_preview_played',{style:cuts[0].style});
+  }catch(error){feedback.textContent=error.message;}
+  finally{previewBusy=false;summary();}
+};
 $('#editor').onsubmit=async e=>{e.preventDefault();if(busy||!config.enabled)return;busy=true;summary();remember();try{const result=await(await api('checkout',{...request,phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value),cuts})).json();if(!result.url){location.assign(`/edit/?order=${encodeURIComponent(result.orderId)}#access=${request.accessToken}`);return;}event('the_edit_checkout_started',{cut_count:cuts.length});location.assign(result.url);}catch(error){busy=false;summary();$('#feedback').textContent=error.message;}};
 let pollTimer,orderData,orderAuth;
 async function download(cutId){
