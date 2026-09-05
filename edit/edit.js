@@ -19,7 +19,7 @@ function description(c){return sounds[c.style][0]+(c.style==='chopped_up'?` · $
 function remember(){try{sessionStorage.setItem(savedKey,JSON.stringify({phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:$('#bpm').value,cuts,request}));}catch{}}
 function identity(){return {requestId:crypto.randomUUID(),accessToken:Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('')};}
 let request=identity();
-function previewHint(){return config.preview?'Preview mode: 25 short finished-cut previews per hour.':'Hear the finished effect before checkout.';}
+function previewHint(){return config.preview?'Preview mode: 100 short finished-cut previews per hour.':'Hear the finished effect before checkout.';}
 function changed(){request=identity();remember();if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=undefined;}const player=$('#preview-player');player.pause();player.removeAttribute('src');player.hidden=true;$('#preview-feedback').textContent=previewHint();summary();}
 function summary(){
   const count=cuts.length,price=count===2?9:15;
