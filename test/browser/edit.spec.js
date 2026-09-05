@@ -1,14 +1,12 @@
 const {test,expect}=require('@playwright/test');
 test.beforeEach(async({page})=>{await page.route('**/api/the-edit?action=config',r=>r.fulfill({json:{enabled:true,preview:true,voices:[{id:'test_voice',name:'Test voice'}]}}));});
-test('two-cut and four-cut selection, identical Chop prevention, server-selected checkout',async({page})=>{
+test('two curated cuts use different sounds and server-selected checkout',async({page})=>{
   await page.goto('/edit/');await expect(page.locator('#checkout')).toContainText('Get 2 cuts — $9');
   await page.locator('#phrase').fill('Make the room move.');await page.locator('#voice').selectOption('test_voice');
-  await page.locator('#sound-0').selectOption('chopped_up');await page.locator('#sound-1').selectOption('chopped_up');
-  await expect(page.getByLabel('Cut amount for cut 2')).toHaveValue('small');
-  await expect(page.getByLabel('Cut amount for cut 2').locator('option[value="half"]')).toBeDisabled();
-  await page.locator('#upgrade').click();await expect(page.locator('.slot')).toHaveCount(4);await expect(page.locator('#checkout')).toContainText('Get 4 cuts — $15');
+  await expect(page.locator('#sound-0 option[value="chopped_up"]')).toHaveCount(0);
+  await page.locator('#sound-0').selectOption('sexy_robot');await expect(page.locator('#sound-1 option[value="sexy_robot"]')).toBeDisabled();
   let body;await page.route('**/api/the-edit?action=checkout',route=>{body=route.request().postDataJSON();return route.fulfill({status:503,json:{error:'Test checkout received'}});});
-  await page.locator('#checkout').click();await expect(page.locator('#feedback')).toHaveText('Test checkout received');expect(body.cuts).toHaveLength(4);expect(body).not.toHaveProperty('price');expect(body).not.toHaveProperty('cutCount');
+  await page.locator('#checkout').click();await expect(page.locator('#feedback')).toHaveText('Test checkout received');expect(body.cuts).toHaveLength(2);expect(body).not.toHaveProperty('price');expect(body).not.toHaveProperty('cutCount');
 });
 test('not-ready and ready orders survive reload; protected individual files form the ZIP',async({page})=>{
   let ready=false;const cuts=[{id:'a',name:'Clean As Fuck',filename:'Clean.wav',renderStatus:'ready'},{id:'b',name:'Dark & Echo',filename:'Dark.wav',renderStatus:'ready'}];
