@@ -8,6 +8,8 @@
     "marketing:brief": "node scripts/marketing-brief.mjs",
     "dispatch:brief": "node scripts/atelier-dispatch-brief.mjs",
     "test": "node --test test/*.test.js",
+    "verify:edit-contract": "npm test && npm run build",
+    "verify:edit-live": "node scripts/verify-the-edit-live.mjs",
     "test:ui": "playwright test"
   },
   "devDependencies": {

@@ -1,6 +1,53 @@
 # The Edit — candidate implementation
 
-Status: candidate deployed to a protected Vercel Preview, with automated service/audio checks. NOT production-ready. The live checkout/render/download sequence and human voice QA remain unverified. Keep THE_EDIT_ENABLED=false until preview credentials, rights and the full test chain are verified.
+Status: candidate implementation, now migrated at code level from the former ElevenLabs renderer to a private Voicebox gateway adapter. NOT production-ready or deployed. The live preview/payment/download sequence, private GPU worker, human voice QA and provider decision remain unverified. Keep `THE_EDIT_ENABLED=false` until every release gate is verified.
+
+## Monsieur Lousive four-cut product contract — 2026-09-09
+
+The Edit is no longer a two-cut selector. The local candidate now has one fixed customer package. **Monsieur Lousive is its first pilot character, not a product-wide hardcode:** each future approved HSC character can enter the same pack through an explicit private Voicebox profile and the `hsc-four-cuts-v1` cut-set contract.
+
+> **One Phrase. Four Cuts.**
+
+The customer provides a phrase, selects Monsieur Lousive and BPM, then previews and receives all four named cuts in this exact order:
+
+1. **Flat Tag Cut** — dry, direct Monsieur source character.
+2. **Clean Cut** — polished clean delivery.
+3. **Dark Echo Cut** — low, spacious pressure treatment.
+4. **Sexy Synthetic Cut** — the customer-facing name for the Logic-approved Sexy Robot treatment.
+
+This is enforced server-side: browser-provided cut selections are ignored and the order model derives the four-cut sequence itself. Individual previews remain available, but an order is always the full package. The UI deliberately says `One Phrase. Four Cuts.` and does not expose plugin controls, effect parameters or a customer choice between the four cuts.
+
+**Critical release boundary:** this is a local product contract and UI/order-model change only. The customer-facing names describe the approved Logic v02 references; the current programmatic renderer is not evidence that it recreates those Logic chains. Keep orders closed until the private Voicebox/GPU renderer produces, stores and previews the exact approved four-cut output for representative phrases and BPMs. Price and payment-provider finalization remain separate product decisions; no live checkout or production price was changed here.
+
+## Voicebox/Monsieur Lousive vertical slice — 2026-09-08
+
+- The customer-facing voice selector now admits only explicit HSC Voicebox profiles from `THE_EDIT_VOICES_JSON`. The approved local candidate is presented to customers as **Monsieur Lousive — Flat Tag**. Its current Voicebox workspace name is `Monsieur Felix Lousive`; that private workspace name must never be shown in customer UI or copy. A safe configuration has the shape:
+
+  ```json
+  {
+    "id": "monsieur_lousive_flat_tag_v1",
+    "name": "Monsieur Lousive — Flat Tag",
+    "range": "mid",
+    "licensed": true,
+    "provider": "voicebox",
+    "profileId": "VOICEBOX_PROFILE_UUID",
+    "engine": "chatterbox_turbo",
+    "language": "en",
+    "voiceProfile": "masculine",
+    "profileVersion": "flat-tag-v1"
+  }
+  ```
+
+- `profileId`, engine and model size are server configuration. The browser only receives `id` and `name`; it cannot select an arbitrary Voicebox profile, engine, URL or model.
+- `THE_EDIT_VOICEBOX_URL` and `THE_EDIT_VOICEBOX_TOKEN` point to an HSC-authenticated private gateway, not a raw public Voicebox endpoint. The adapter calls `POST /generate` then `GET /audio/{generationId}` and converts the returned WAV to the existing HSC 48 kHz render pipeline.
+- Preview responses include `X-HSC-Generation-ID`. The next implementation slice must persist preview assets and their `generationId` before checkout, so a paid download unlocks the exact preview rather than a later rerender.
+- No new The Edit render path calls ElevenLabs or uses `ELEVENLABS_API_KEY`.
+
+The local source profile selected by the HSC operator is **Monsieur Lousive — Flat Tag**. It is a separately cloned Voicebox profile with four new long-form English pronunciation references. In a direct same-phrase local A/B audition on 2026-09-08, the operator selected it over the earlier imported `Monsieur Lousive` profile on all criteria. Its local profile UUID is not production configuration: export/import it to the GPU worker first, then use the worker's confirmed profile UUID in `THE_EDIT_VOICES_JSON`.
+
+### Mandatory local gate before GPU
+
+Run `Run Monsieur Lousive Local Test.command` with the Voicebox desktop app open. It discovers the approved local Flat Tag candidate, starts a loopback-only HSC gateway, generates one phrase using Chatterbox Turbo, applies the three HSC recipes and writes WAVs plus a manifest. Listen to every WAV before proceeding. This proves the audio route, profile routing, gateway token and HSC DSP locally; it does **not** prove public hosting, payment, customer preview persistence or commercial readiness.
 
 ## Scope
 
@@ -21,15 +68,15 @@ The user-approved brief specifically requires a feature branch and preview befor
 
 ## Candidate audio recipes
 
-48 kHz mono 24-bit PCM WAV. Recipe version `edit-v1-candidate-1` is saved per cut and pinned in the renderer. Future versions must retain old recipe implementations while orders remain reproducible.
+48 kHz mono 24-bit PCM WAV. Recipe version is saved per cut and pinned in the renderer. Future versions must retain old recipe implementations while orders remain reproducible.
 
-- Clean: short, low-level early-reflection reverb candidate.
-- Dark: voice-range mapping (-1/-2.5/-4), duration-compensated pitch, filtered finite echo repeats tied to BPM.
-- Robot: restrained adaptation of Atelier's deterministic glitch, dry voice blend, subtle crusher and high-frequency cap.
+- Clean: the selected voice in original pitch and timing, without creative EQ, compression, de-essing, pitch or echo; only export peak safety and a short end fade remain.
+- Dark Echo: **locally sound-approved v1** on 2026-09-08. It is a fixed -3 semitone delivery plus one dotted-eighth echo tied to BPM. The HSC operator approved its tone, intelligibility after pitch drop and perceived reverb/echo amount. It deliberately has no additional tone filter, repeat tap, room reflection, robotisation or gate. This approval applies to Monsieur Lousive — Flat Tag at 128 BPM only; it is not a deployment or full cross-BPM/phrase release approval.
+- Sexy Robot: the earlier programmatic Voicebox/FFmpeg candidates, including `v5`, are retired as product sound-design candidates. On 2026-09-08 the HSC operator created and approved **Sexy Robot v01** in Logic Pro. The local source of truth is `outputs/Channel strip settings/HSC_SexyRobot_01.cst`, with the accompanying Logic project in `outputs/kitchen-inputs/Logic files/HSC_SexyRobot_v01/`. Its fixed channel-strip order is Channel EQ → ChromaVerb → Robo Flanger → Pitch Shifter → Flanger → Compressor; two phrases were approved through the same strip at 128 BPM: `HSC_SexyRobot_GoldMaster_v01_128.wav` and `HSC_SexyRobot_v01_ProofPhrase_128.wav`. This establishes creative repeatability for the two tested phrases. It does not yet establish unattended server rendering, cross-BPM approval, arbitrary-phrase approval, customer preview, payment or delivery.
 - Chop: constant eighth / eighth-triplet / sixteenth cycle with 50% / 20% audible window and 1.5 ms edges; no changing density.
-- Shared highpass, conditional de-essing, compression, constant gain toward -18 LUFS where sensible, 4x oversampled limiter, deliberate tail fade and independent true-peak measurement of the actual final 48 kHz file. Export fails if measured true peak exceeds -1 dBTP. Short-sample loudness and timbre require listening approval.
+- Dark/Robot use their own candidate processing. Export applies peak safety, a deliberate tail fade and independent true-peak measurement of the actual final 48 kHz file. Export fails if measured true peak exceeds -1 dBTP. Short-sample loudness and timbre require listening approval.
 
-The current Clean reverb and all other recipes are candidates, not approved sound design. Silence/generation above 25 seconds fails safely. Human QA must confirm that limiting long generated phrases is commercially acceptable before opening orders.
+Clean is approved as the unprocessed reference, not as a finished commercial effect. Dark Echo v1 is locally sound-approved for the stated reference test. Sexy Robot v01 is **locally sound-approved in Logic for its two stated 128-BPM proof phrases**, but has no automated renderer yet. Every other creative recipe remains a candidate. Silence/generation above 25 seconds fails safely. Human QA must confirm cross-BPM/cross-phrase behavior and that limiting long generated phrases is commercially acceptable before opening orders.
 
 ## Preview configuration
 
@@ -37,7 +84,7 @@ Use the environment names in `.env.example`. The separate THE_EDIT_STRIPE_SECRET
 
 Configure `THE_EDIT_ORIGIN` as the stable preview origin; register the test webhook at that origin's `/api/the-edit-webhook` for checkout.session.completed and checkout.session.async_payment_succeeded. Stripe must be able to access that endpoint through preview protection using an approved webhook-access configuration. Do not disable protection broadly.
 
-The preview needs the existing voice-service credential and Redis access, plus a Stripe test credential. Set explicit voice allowlist entries `{id,name,range,licensed:true}` only after confirming rights and renderer availability. Production additionally requires THE_EDIT_QA_APPROVED_VERSION matching the recipe and THE_EDIT_TERMS_URL with approved commercial-use terms. The preview currently keeps these unset and orders closed.
+The preview needs the private Voicebox gateway URL/token, Redis access and a payment-provider test credential only when checkout work is resumed. Set explicit HSC Voicebox entries only after confirming source rights, profile ID, engine and renderer availability. Production additionally requires `THE_EDIT_QA_APPROVED_VERSION` matching the recipe and `THE_EDIT_TERMS_URL` with approved commercial-use terms. The preview currently keeps these unset and orders closed.
 
 ## Verification performed
 

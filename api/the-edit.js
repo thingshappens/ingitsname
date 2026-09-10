@@ -1,5 +1,5 @@
 const {settings,createService}=require('../lib/edit/service');
-const {voices,InputError,STYLES,DELIVERIES,VERSION,filename}=require('../lib/edit/model');
+const {voices,InputError,STYLES,CUT_SET_ID,DELIVERIES,VERSION,filename}=require('../lib/edit/model');
 const store=require('../lib/edit/store');
 const rendering=require('../lib/edit/render');
 const service=createService();
@@ -9,7 +9,7 @@ module.exports=async function(req,res){
   try{
     if(req.method==='GET'&&action==='config'){
       let enabled=false;try{settings();enabled=true;}catch{}
-      return res.status(200).json({termsUrl:process.env.THE_EDIT_TERMS_URL||null,enabled,preview:process.env.VERCEL_ENV!=='production',voices:voices().map(v=>({id:v.id,name:v.name})),message:enabled?'':'The Edit is being prepared. Orders are not open yet.'});
+      return res.status(200).json({termsUrl:process.env.THE_EDIT_TERMS_URL||null,enabled,preview:process.env.VERCEL_ENV!=='production',cutSet:{id:CUT_SET_ID},voices:voices().map(v=>({id:v.id,name:v.name})),message:enabled?'':'The Edit is being prepared. Orders are not open yet.'});
     }
     if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
     if(action==='preview'){
@@ -21,14 +21,15 @@ module.exports=async function(req,res){
       if(typeof phrase!=='string'||!phrase.trim()||phrase.trim().length>64||/[\x00-\x08\x0b-\x1f]/.test(phrase))throw new InputError('Write a short phrase of up to 64 characters to preview it.');
       if(!voice)throw new InputError('Choose an available voice.');
       if(!Number.isInteger(bpm)||bpm<60||bpm>200)throw new InputError('Choose a whole BPM from 60 to 200.');
-      if(!cut||!Object.hasOwn(STYLES,cut.style)||cut.groove!==undefined||cut.cutAmount!==undefined)throw new InputError('Choose a sound to preview.');
+      if(!cut||!Object.hasOwn(STYLES,cut.style)||cut.groove!==undefined||cut.cutAmount!==undefined)throw new InputError('Choose a cut to preview.');
       const previewLimit=process.env.VERCEL_ENV==='production'?12:100;
       if(!await store.previewRateLimit(ip,previewLimit))return res.status(429).json({error:`You have used the ${previewLimit} short previews available this hour. Please come back shortly.`});
-      const order={phrase:phrase.trim(),voiceId:voice.id,voiceRange:voice.range,voiceProfile:voice.voiceProfile,delivery:'dark',bpm};
+      const order={phrase:phrase.trim(),voiceId:voice.id,characterId:voice.id,voiceRange:voice.range,voiceProfile:voice.voiceProfile,voiceboxProfileId:voice.profileId,voiceboxEngine:voice.engine,voiceboxModelSize:voice.modelSize||null,voiceboxLanguage:voice.language,voiceboxInstruct:voice.instruct||null,voiceProfileVersion:voice.profileVersion||'v1',delivery:'dark',bpm};
       const previewCut={style:cut.style,recipeVersion:VERSION};
-      const pcm=await rendering.generate(order);
-      const audio=await rendering.render(pcm,previewCut,order);
+      const source=await rendering.generate(order);
+      const audio=await rendering.render(source.pcm,previewCut,order);
       res.setHeader('Content-Type','audio/wav');res.setHeader('Content-Disposition','inline; filename="HSC_TheEdit_preview.wav"');
+      res.setHeader('X-HSC-Generation-ID',source.generationId);
       return res.status(200).send(audio.buffer);
     }
     if(action==='checkout'){

@@ -14,3 +14,4 @@ main{max-width:1180px;padding:0 36px;margin:auto}.hero{max-width:980px;margin-le
 
 .voice-preview{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}.voice-preview button{border:1px solid var(--gold);background:transparent;color:var(--gold);padding:12px 16px;font:500 9px 'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase}.voice-preview button:disabled{opacity:.45;cursor:not-allowed}.voice-preview p{margin:10px 0 0;color:var(--muted);font-size:10px;line-height:1.6}.voice-preview audio{display:block;width:100%;height:34px;margin-top:12px}
 .preview-cut{margin-top:17px;border:1px solid var(--gold);background:transparent;color:var(--gold);padding:10px 12px;font:500 8px 'DM Mono',monospace;letter-spacing:.09em;text-transform:uppercase}.preview-cut:disabled{opacity:.45;cursor:not-allowed}
+.slot h3{font:500 22px/1.05 'Playfair Display',serif;letter-spacing:-.025em;margin:0}.slot .description{margin-top:13px}

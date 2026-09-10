@@ -1,8 +1,14 @@
 # HSC — The Edit: implementation brief
 
-**Status:** approved product direction for a new third HSC page. This is a build brief, not evidence that the feature, Stripe prices, audio chain, or delivery flow already exist in production.
+**Status:** historical product brief with a 2026-09-07 technical decision update. This is not evidence that the feature, payment configuration, audio chain, GPU worker or delivery flow exists in production.
 
-**Build goal:** add a new, deliberately simple, fully self-service vocal product named **The Edit** to HSC. It must run automatically after payment: no manual Logic work, microphone recording, bespoke sound design, or human fulfilment.
+**Build goal:** add a new, deliberately simple, fully self-service vocal product named **The Edit** to HSC. It must preview the customer's exact requested cuts before payment and unlock that same generation after verified payment. It must use the approved private Voicebox/GPU path, not ElevenLabs, and must never expose a personal Mac or raw Voicebox endpoint publicly.
+
+> **Decision update:** HSC character profiles, beginning with `felix_lousive_v1`, are private server-side Voicebox profiles. The customer UI receives only character ID/name. Voicebox Remote Mode may power an internal GPU worker, but its raw API must stay behind an HSC-authenticated private gateway. Stripe Managed Payments/Paddle and final public pricing remain unresolved; do not hard-code or change a public price based on this historical brief.
+
+> **Decision update (2026-09-07, payments):** Payment provider decided — migrate **all of HSC** from Stripe to **Paddle** (Atelier, Producer Pack, and The Edit alike), not just The Edit. HSC currently has **zero paying customers**, so there is no live-transaction migration risk and no cutover/parallel-run safety requirement applies. Implement directly against Paddle; do not stage it alongside existing Stripe code or attempt a phased customer-safe migration. Wherever this brief says "Stripe" (including Section 7, "Stripe implementation requirements," and Section 8's "confirm the existing... checkout flow still works before touching it"), read it as **Paddle**, and treat the "do not change any existing Stripe product" caution as void — Stripe is being fully replaced, not preserved alongside Paddle.
+>
+> **Decision update (2026-09-07, voice generation):** ElevenLabs is fully out of scope — not a fallback, not a cost line item. Voice generation uses Voicebox exclusively, with HSC's own house-created voices (e.g. `felix_lousive_v1`). This is both cheaper (no per-call voice-API cost, only GPU compute for the render worker) and more precisely the product identity HSC is selling — bespoke house voices, not a licensed third-party voice.
 
 ## 1. Product architecture — preserve what exists
 

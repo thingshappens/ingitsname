@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npm run verify:edit-contract",
   "functions": {
     "api/the-edit-webhook.js": {
       "maxDuration": 300,
