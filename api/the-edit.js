@@ -9,7 +9,7 @@ module.exports=async function(req,res){
   try{
     if(req.method==='GET'&&action==='config'){
       let enabled=false;try{settings();enabled=true;}catch{}
-      return res.status(200).json({termsUrl:process.env.THE_EDIT_TERMS_URL||null,enabled,preview:process.env.VERCEL_ENV!=='production',voices:voices().map(v=>({id:v.id,name:v.name})),message:enabled?'':'The Edit is being prepared. Orders are not open yet.'});
+      return res.status(200).json({termsUrl:process.env.THE_EDIT_TERMS_URL||null,enabled,preview:process.env.VERCEL_ENV!=='production',voices:voices().map(v=>({id:v.id,name:v.name,shortName:v.shortName,edition:v.edition,status:v.status})),message:enabled?'':'Felix is being recorded for The Edit. Orders are not open yet.'});
     }
     if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
     if(action==='preview'){

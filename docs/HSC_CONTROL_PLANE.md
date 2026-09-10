@@ -21,7 +21,7 @@ This file is the operational source of truth for HSC web products. Update it in 
 - **Tailor** is HSC's private commission path. The Fitting Room estimator may show a non-binding range, but the final quote remains a human HSC decision.
 - **Atelier** is the DJ-first creation instrument. It can expose controlled creative choices and team-character collections.
 - **The Edit** is a finished, low-choice product: the customer supplies a phrase and chooses the HSC character who should deliver it. HSC, not the customer, chooses the musical recipe, pacing, processing and final cut. Do not add sliders, technical controls or a large voice gallery.
-- Customer-facing HSC character voices must be original, authorized performance recordings owned or commissioned by HSC. Do not add new ElevenLabs AI voices as the source for those collections. Existing ElevenLabs-backed paths remain an implementation migration task and are not proof that a replacement renderer is ready.
+- Customer-facing HSC character voices must be original, authorized performance recordings owned or commissioned by HSC. Do not add new ElevenLabs AI voices as the source for those collections. The Edit's former ElevenLabs rendering path was removed on the Felix Pilot branch state; it remains closed until its approved recording source and delivery worker are ready. Atelier's existing ElevenLabs path is a separate migration and has not been changed by this rule.
 
 ## Release checklist
 
