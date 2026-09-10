@@ -1,1 +1,65 @@
-{"functions":{"api/the-edit-webhook.js":{"maxDuration":300,"includeFiles":"node_modules/ffmpeg-static/**"},"api/the-edit.js":{"maxDuration":60}},"rewrites":[{"source":"/edit","destination":"/edit/index.html"},{"source":"/edit/","destination":"/edit/index.html"}],"headers":[{"source":"/edit(.*)","headers":[{"key":"Referrer-Policy","value":"no-referrer"},{"key":"X-Robots-Tag","value":"noindex"}]}]}
+{
+  "functions": {
+    "api/the-edit-webhook.js": {
+      "maxDuration": 300,
+      "includeFiles": "node_modules/ffmpeg-static/**"
+    },
+    "api/the-edit.js": {
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "theedit.hautesoundcouture.com"
+        }
+      ],
+      "destination": "/edit/index.html"
+    },
+    {
+      "source": "/edit",
+      "destination": "/edit/index.html"
+    },
+    {
+      "source": "/edit/",
+      "destination": "/edit/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/edit(.*)",
+      "headers": [
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "theedit.hautesoundcouture.com"
+        }
+      ],
+      "headers": [
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    }
+  ]
+}
