@@ -16,6 +16,13 @@ This file is the operational source of truth for HSC web products. Update it in 
 | Tailor | Intended: `https://tailor.hautesoundcouture.com/`; recovered product: `https://hsc-bespoke-studio.vercel.app/` | The Fitting Room commission configurator; source repository still needs to be located and merged into this control repository | Separate Vercel deployment, `hsc-bespoke-studio` | The six-step calculator is publicly reachable and returns a dynamic non-binding estimated range. The intended `tailor` domain is currently broken and is not configured in this Vercel project. Do not replace the configurator with the unrelated legacy Tally form. |
 | Cuts | No public web entry selected | Separate product; source and host not selected | Not selected | Planned. |
 
+## Product decisions in force
+
+- **Tailor** is HSC's private commission path. The Fitting Room estimator may show a non-binding range, but the final quote remains a human HSC decision.
+- **Atelier** is the DJ-first creation instrument. It can expose controlled creative choices and team-character collections.
+- **The Edit** is a finished, low-choice product: the customer supplies a phrase and chooses the HSC character who should deliver it. HSC, not the customer, chooses the musical recipe, pacing, processing and final cut. Do not add sliders, technical controls or a large voice gallery.
+- Customer-facing HSC character voices must be original, authorized performance recordings owned or commissioned by HSC. Do not add new ElevenLabs AI voices as the source for those collections. Existing ElevenLabs-backed paths remain an implementation migration task and are not proof that a replacement renderer is ready.
+
 ## Release checklist
 
 1. Work only on `marketing-automation`; keep `Voicebox/` and model caches outside commits.
