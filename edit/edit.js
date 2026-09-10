@@ -95,7 +95,7 @@ async function init(){
     config=await(await fetch('/api/the-edit?action=config')).json();
     if(config.termsUrl){const terms=new URL(config.termsUrl);if(terms.protocol==='https:'){$('.licensing a').href=terms.href;$('#license p').textContent='Use words you have the right to use. Your purchase is subject to the linked commercial-use terms. No exclusivity over a voice or phrase is included.';}}
     $('#availability').textContent=config.enabled?(config.preview?'PREVIEW · Stripe test mode. No live orders.':''):config.message;
-    $('#voice').replaceChildren(new Option(config.voices.length?'Choose an HSC character':'Characters are being curated',''),...config.voices.map(v=>new Option(`${v.shortName||v.name} · ${v.edition||'HSC character'}${v.status==='recording'?' · recording now':''}`,v.id)));
+    $('#voice').replaceChildren(new Option(config.voices.length?'Choose your voice':'Voices are being curated',''),...config.voices.map(v=>new Option(v.name,v.id)));
     const saved=JSON.parse(sessionStorage.getItem(savedKey)||'null');if(saved?.voiceId)$('#voice').value=saved.voiceId;
     draw();
   }catch{$('#availability').textContent='The Edit is being prepared. Orders are not open yet.';$('#voice').replaceChildren(new Option('Voices are being curated',''));}

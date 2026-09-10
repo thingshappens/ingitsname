@@ -1,6 +1,6 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');
 const {randomUUID}=require('node:crypto');const model=require('../lib/edit/model');const {createService}=require('../lib/edit/service');
-const voice=model.voices()[0];process.env.STRIPE_PRICE_THE_EDIT_2='price_two';process.env.STRIPE_PRICE_THE_EDIT_4='price_four';
+const voice={id:'abcdefgh12345',name:'Test voice',range:'mid',licensed:true};process.env.THE_EDIT_VOICES_JSON=JSON.stringify([voice]);process.env.STRIPE_PRICE_THE_EDIT_2='price_two';process.env.STRIPE_PRICE_THE_EDIT_4='price_four';
 const input=()=>({phrase:'Make the room move.',voiceId:voice.id,bpm:128,cuts:[{style:'clean'},{style:'dark_echo'}]});
 test('server rejects duplicates, unsupported options, unavailable voice and price-count spoofing',()=>{
   assert.equal(model.validate({...input(),price:1,cutCount:4}).cutCount,2);
@@ -9,10 +9,6 @@ test('server rejects duplicates, unsupported options, unavailable voice and pric
   assert.throws(()=>model.validate(input(),[]));
 });
 test('The Edit offers three curated sounds and requires two different choices',()=>{assert.deepEqual(Object.keys(model.STYLES),['clean','dark_echo','sexy_robot']);assert.throws(()=>model.validate({...input(),cuts:[{style:'chopped_up'},{style:'clean'}]}),model.InputError);assert.equal(model.validate({...input(),cuts:[{style:'sexy_robot'},{style:'clean'}]}).cuts.length,2);});
-test('The Edit exposes the Felix pilot as an HSC character, never an environment-supplied AI voice',()=>{
-  process.env.THE_EDIT_VOICES_JSON=JSON.stringify([{id:'ai-voice',name:'AI voice',range:'mid',licensed:true}]);
-  assert.deepEqual(model.voices().map(({id,status})=>({id,status})),[{id:'felix-lousive',status:'recording'}]);
-});
 function fixture(){
   const orders=new Map(),locks=new Set(),assets=new Map();let renders=0,generations=0,sessions=0,fail=false;
   const store={create:async o=>{if(!orders.has(o.id))orders.set(o.id,structuredClone(o));},get:async id=>structuredClone(orders.get(id)),lock:async id=>{if(locks.has(id))return null;locks.add(id);return 'lease';},unlock:async id=>locks.delete(id),save:async o=>orders.set(o.id,structuredClone(o)),redis:()=>({sadd:async()=>{},srem:async()=>{}}),putAudio:async(id,n,b)=>{assets.set(n,b);return {prefix:n,expiresAt:Date.now()+86400000};},audio:async ref=>assets.get(ref.prefix)};
