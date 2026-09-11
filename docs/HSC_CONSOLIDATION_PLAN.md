@@ -13,6 +13,7 @@ routes, navigation, analytics bootstrap and SEO metadata:
 | `hautesoundcouture.com/atelier/` | Atelier | `ingitsname/index.html` and `src.js` |
 | `hautesoundcouture.com/the-edit/` | The Edit | `ingitsname/edit/` and `/api/the-edit*` |
 | `hautesoundcouture.com/tailor/` | The Fitting Room | Separate `hsc-bespoke-studio` deployment; source still to be recovered |
+| `hautesoundcouture.com/cuts/` | Cuts | Separate product module; source and host not yet selected |
 
 The existing subdomains remain compatibility aliases during migration:
 
@@ -52,8 +53,9 @@ never be sent as analytics properties.
    current API routes and payment configuration unchanged.
 3. Recover the Fitting Room source and mount it at `/tailor/`; verify its quote
    endpoint before directing traffic there.
-4. Add the shared analytics/SEO layout and verify each route with Tag Assistant
+4. Reserve `/cuts/` in the app shell, but keep its podcast-editing engine,
+   checkout and events separate from The Edit until the product source is ready.
+5. Add the shared analytics/SEO layout and verify each route with Tag Assistant
    and browser checks.
-5. Switch the root domain and compatibility aliases only after all four routes
+6. Switch the root domain and compatibility aliases only after all five routes
    are verified from the same production commit.
-
