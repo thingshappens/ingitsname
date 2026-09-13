@@ -1,14 +1,6 @@
 import {zipSync} from 'fflate';
 const $=s=>document.querySelector(s);
-// Keep order tokens and customer phrases out of automatic page context.
-if(['atelier.hautesoundcouture.com','theedit.hautesoundcouture.com'].includes(location.hostname)){
-  window.dataLayer=window.dataLayer||[];
-  window.gtag=function(){window.dataLayer.push(arguments);};
-  window.gtag('js',new Date());
-  window.gtag('set',{page_location:location.origin+'/edit/',page_referrer:''});
-  window.gtag('config','AW-18419497110',{send_page_view:false});
-  const tag=document.createElement('script');tag.async=true;tag.src='https://www.googletagmanager.com/gtag/js?id=AW-18419497110';document.head.append(tag);
-}
+// Keep order tokens and customer phrases out of analytics. The shared tag is loaded in index.html.
 let sounds={},cuts=[],config={enabled:false},busy=false,previewBusy=false,previewUrl;
 const savedKey='hsc-the-edit-draft';
 function event(name,props={}){window.gtag?.('event',name,props);}
@@ -47,11 +39,10 @@ async function preview(cut,button){
     const r=await api('preview',{phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value),cut});
     if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=URL.createObjectURL(await r.blob());player.src=previewUrl;player.hidden=false;await player.play();
     feedback.textContent=`Previewing ${description(cut)}.`;
-    event('the_edit_preview_played',{style:cut.style});
   }catch(error){feedback.textContent=error.message;}
   finally{previewBusy=false;button.disabled=false;}
 }
-$('#editor').onsubmit=async e=>{e.preventDefault();if(busy||!config.enabled)return;busy=true;summary();remember();try{const result=await(await api('checkout',{...request,phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value)})).json();if(!result.url){location.assign(`/edit/?order=${encodeURIComponent(result.orderId)}#access=${request.accessToken}`);return;}event('the_edit_checkout_started',{cut_count:cuts.length});location.assign(result.url);}catch(error){busy=false;summary();$('#feedback').textContent=error.message;}};
+$('#editor').onsubmit=async e=>{e.preventDefault();if(busy||!config.enabled)return;busy=true;summary();remember();try{const result=await(await api('checkout',{...request,phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value)})).json();if(!result.url){location.assign(`/edit/?order=${encodeURIComponent(result.orderId)}#access=${request.accessToken}`);return;}event('checkout_started',{product:'the_edit',cut_count:cuts.length});location.assign(result.url);}catch(error){busy=false;summary();$('#feedback').textContent=error.message;}};
 let pollTimer,orderData,orderAuth;
 async function download(cutId){
   const status=$('#order-state');try{
@@ -60,7 +51,7 @@ async function download(cutId){
       const files={};for(const cut of orderData.cuts){const r=await api('download',{...orderAuth,cutId:cut.id});files[cut.filename]=new Uint8Array(await r.arrayBuffer());}
       blob=new Blob([zipSync(files,{level:0})],{type:'application/zip'});name='HSC_TheEdit.zip';
     }else{const r=await api('download',{...orderAuth,cutId});blob=await r.blob();name=orderData.cuts.find(c=>c.id===cutId).filename;}
-    const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);event('the_edit_downloaded',{cut_count:cutId==='all'?orderData.cuts.length:1});
+    const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);event('download_ready',{product:'the_edit',cut_count:cutId==='all'?orderData.cuts.length:1});
   }catch(e){status.textContent=e.message;}
 }
 async function poll(){
@@ -99,6 +90,7 @@ async function init(){
     const saved=JSON.parse(sessionStorage.getItem(savedKey)||'null');if(saved?.voiceId)$('#voice').value=saved.voiceId;
     draw();
   }catch{$('#availability').textContent='Orders open soon.';$('#voice').replaceChildren(new Option('Voices are being curated',''));}
-  $('#preview-feedback').textContent=previewHint();summary();event('the_edit_viewed');
+  $('#preview-feedback').textContent=previewHint();summary();event('product_view',{product:'the_edit'});
 }
+$('#phrase').addEventListener('focus',()=>event('start_edit',{product:'the_edit'}),{once:true});
 init();
