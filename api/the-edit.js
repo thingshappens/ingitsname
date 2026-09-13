@@ -1,4 +1,4 @@
-const {settings,createService}=require('../lib/edit/service');
+const {settings,previewSettings,createService}=require('../lib/edit/service');
 const {voices,InputError,STYLES,CUT_SET_ID,DELIVERIES,VERSION,filename}=require('../lib/edit/model');
 const store=require('../lib/edit/store');
 const rendering=require('../lib/edit/render');
@@ -8,12 +8,12 @@ module.exports=async function(req,res){
   const action=req.query?.action;
   try{
     if(req.method==='GET'&&action==='config'){
-      let enabled=false;try{settings();enabled=true;}catch{}
-      return res.status(200).json({termsUrl:process.env.THE_EDIT_TERMS_URL||null,enabled,preview:process.env.VERCEL_ENV!=='production',cutSet:{id:CUT_SET_ID},voices:voices().map(v=>({id:v.id,name:v.name})),message:enabled?'':'The Edit is being prepared. Orders are not open yet.'});
+      let enabled=false,previewEnabled=false;try{settings();enabled=true;}catch{}try{previewSettings({headers:{origin:`https://${req.headers.host}`,host:req.headers.host}});previewEnabled=true;}catch{}
+      return res.status(200).json({termsUrl:process.env.THE_EDIT_TERMS_URL||null,enabled,previewEnabled,preview:process.env.VERCEL_ENV!=='production',cutSet:{id:CUT_SET_ID},voices:voices().map(v=>({id:v.id,name:v.name})),message:enabled?'':previewEnabled?'Private Felix preview is ready. Orders remain closed.':'The Edit is being prepared. Orders are not open yet.'});
     }
     if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
     if(action==='preview'){
-      const config=settings();
+      const config=previewSettings(req);
       if(req.headers.origin!==config.origin)return res.status(403).json({error:'Invalid origin'});
       const ip=String(req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0];
       const {phrase,voiceId,bpm,cut}=req.body||{};

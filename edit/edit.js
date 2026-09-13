@@ -23,7 +23,7 @@ function summary(){
 function draw(){
   $('#slots').replaceChildren(...cuts.map((c,i)=>{
     const section=document.createElement('section');section.className='slot';
-    section.innerHTML=`<div class="slot-top"><span aria-hidden="true">${sounds[c.style].mark}</span><span class="slot-symbol" aria-hidden="true">${String(i+1).padStart(2,'0')}</span></div><h3>${sounds[c.style].name}</h3><p class="description">${sounds[c.style].description}</p><button class="preview-cut" type="button" ${!config.enabled||previewBusy?'disabled':''}>Hear cut ${String(i+1).padStart(2,'0')} ↗</button>`;
+    section.innerHTML=`<div class="slot-top"><span aria-hidden="true">${sounds[c.style].mark}</span><span class="slot-symbol" aria-hidden="true">${String(i+1).padStart(2,'0')}</span></div><h3>${sounds[c.style].name}</h3><p class="description">${sounds[c.style].description}</p><button class="preview-cut" type="button" ${!config.previewEnabled||previewBusy?'disabled':''}>Hear cut ${String(i+1).padStart(2,'0')} ↗</button>`;
     section.querySelector('.preview-cut').onclick=()=>preview(c,section.querySelector('.preview-cut'));
     return section;
   }));
@@ -32,7 +32,7 @@ function draw(){
 for(const id of ['phrase','voice','bpm'])$(`#${id}`).addEventListener('input',()=>{$('#count').textContent=`${$('#phrase').value.length} / 120`;changed();});
 async function api(action,body){const r=await fetch(`/api/the-edit?action=${action}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Please try again.');}return r;}
 async function preview(cut,button){
-  if(previewBusy||!config.enabled||!$('#phrase').value.trim()||!$('#voice').value){$('#preview-feedback').textContent='Add a phrase and select a vocal edition first.';return;}
+  if(previewBusy||!config.previewEnabled||!$('#phrase').value.trim()||!$('#voice').value){$('#preview-feedback').textContent='Add a phrase and select a vocal edition first.';return;}
   previewBusy=true;button.disabled=true;
   const feedback=$('#preview-feedback'),player=$('#preview-player');feedback.textContent='Preparing a short preview…';player.hidden=true;
   try{
