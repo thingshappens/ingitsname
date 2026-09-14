@@ -1,4 +1,5 @@
 import {zipSync} from 'fflate';
+import catalogue from './cut-catalog.json';
 const $=s=>document.querySelector(s);
 // Keep order tokens and customer phrases out of analytics. The shared tag is loaded in index.html.
 let sounds={},cuts=[],config={enabled:false},busy=false,previewBusy=false,previewUrl;
@@ -72,12 +73,9 @@ $('#refresh-order').onclick=poll;
 async function init(){
   try{const saved=JSON.parse(sessionStorage.getItem(savedKey)||'null');if(saved){$('#phrase').value=String(saved.phrase||'').slice(0,120);$('#bpm').value=saved.bpm||128;if(saved.request)request=saved.request;}}
   catch{}
-  try{
-    const catalogue=await(await fetch('./cut-catalog.json')).json();
-    if(catalogue.id!=='hsc-four-cuts-v1'||!Array.isArray(catalogue.cuts)||catalogue.cuts.length!==4)throw new Error('The Edit cut catalogue is unavailable.');
-    sounds=Object.fromEntries(catalogue.cuts.map(c=>[c.style,c]));
-    cuts=catalogue.cuts.map(c=>({style:c.style}));
-  }catch{$('#availability').textContent='The Edit cut catalogue is unavailable.';return;}
+  if(catalogue.id!=='hsc-four-cuts-v1'||!Array.isArray(catalogue.cuts)||catalogue.cuts.length!==4){$('#availability').textContent='The Edit cut catalogue is unavailable.';return;}
+  sounds=Object.fromEntries(catalogue.cuts.map(c=>[c.style,c]));
+  cuts=catalogue.cuts.map(c=>({style:c.style}));
   draw();$('#count').textContent=`${$('#phrase').value.length} / 120`;
   const params=new URLSearchParams(location.search),access=new URLSearchParams(location.hash.slice(1)).get('access');
   if(params.get('order')&&access){orderAuth={orderId:params.get('order'),accessToken:access};$('#editor').hidden=true;$('#order').hidden=false;poll();}
