@@ -267,6 +267,21 @@ async function resampleTo48k(buffer){
   return offline.startRendering();
 }
 
+function addSourceHeadroom(buffer,targetDb=-9){
+  const target=Math.pow(10,targetDb/20);let peak=0;
+  for(let channel=0;channel<buffer.numberOfChannels;channel++){
+    const data=buffer.getChannelData(channel);
+    for(let i=0;i<data.length;i++)peak=Math.max(peak,Math.abs(data[i]));
+  }
+  if(peak===0||peak<=target)return buffer;
+  const gain=target/peak;
+  for(let channel=0;channel<buffer.numberOfChannels;channel++){
+    const data=buffer.getChannelData(channel);
+    for(let i=0;i<data.length;i++)data[i]*=gain;
+  }
+  return buffer;
+}
+
 $('#recordVoiceButton').addEventListener('click',async()=>{
   if(mediaRecorder?.state==='recording'){stopRecording();return;}
   if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
@@ -284,7 +299,7 @@ $('#recordVoiceButton').addEventListener('click',async()=>{
         const bytes=await blob.arrayBuffer();
         audioContext ||= new AudioContext();
         sourceBuffer=await audioContext.decodeAudioData(bytes);
-        sourceBuffer=await resampleTo48k(sourceBuffer);
+        sourceBuffer=addSourceHeadroom(await resampleTo48k(sourceBuffer));
         sourceMode='recorded';currentGenerationId=crypto.randomUUID();isPaid=false;paidViaPack=false;
         updateGenerationAvailability();
         if(recordingUrl)URL.revokeObjectURL(recordingUrl);
@@ -330,7 +345,7 @@ $('#generate').addEventListener('click',async()=>{
     if(!r.ok){const d=await r.json();throw new Error(d.error||'Generation failed');}
     const bytes=await r.arrayBuffer();
     audioContext ||= new AudioContext();
-    sourceBuffer=await audioContext.decodeAudioData(bytes);
+    sourceBuffer=addSourceHeadroom(await audioContext.decodeAudioData(bytes));
     currentGenerationId=crypto.randomUUID();paidViaPack=r.headers.get('x-hsc-producer-pack')==='true';isPaid=paidViaPack;sessionStorage.removeItem('hscPaidSession');
     if(paidViaPack){packRemaining=Number(r.headers.get('x-hsc-credit-remaining')||0);renderPackStatus();}
     sourceMode=generationMode;
@@ -378,7 +393,7 @@ async function showDispatch(index,button){
     const reverbTail=fx.reverb>0?.35+Math.pow(fx.reverb/100,.7)*4.65:0;
     const duration=sourceBuffer.duration/rate+Math.max(echoTail,reverbTail)+.08;
     const offline=new OfflineAudioContext(Math.max(2,sourceBuffer.numberOfChannels),Math.ceil(duration*sourceBuffer.sampleRate),sourceBuffer.sampleRate);
-    const master=offline.createGain(),src=offline.createBufferSource();connectMastering(offline,master,offline.destination);master.gain.setValueAtTime(1,Math.max(0,duration-.04));master.gain.linearRampToValueAtTime(0,duration);
+    const master=offline.createGain(),src=offline.createBufferSource();master.connect(offline.destination);master.gain.setValueAtTime(1,Math.max(0,duration-.04));master.gain.linearRampToValueAtTime(0,duration);
     src.buffer=prepareSourceBuffer(offline,sourceBuffer,p);connectTreatment(offline,src,p,master);src.start();
     const rendered=await offline.startRendering();
     if(dispatchAudioUrl)URL.revokeObjectURL(dispatchAudioUrl);
@@ -543,7 +558,7 @@ function createReverbImpulse(context,amount){
 }
 
 function connectWidth(context,input,destination,widthValue){
-  const output=context.createGain();output.gain.value=.88;output.connect(destination);
+  const output=context.createGain();output.gain.value=.74;output.connect(destination);
   const direct=context.createGain(),distance=(widthValue-50)/50;
   input.connect(direct);direct.connect(output);
   if(distance<=0){
@@ -555,7 +570,7 @@ function connectWidth(context,input,destination,widthValue){
   direct.gain.value=1-distance*.16;
   const leftDelay=context.createDelay(.05),rightDelay=context.createDelay(.05),leftPan=context.createStereoPanner(),rightPan=context.createStereoPanner(),leftGain=context.createGain(),rightGain=context.createGain();
   leftDelay.delayTime.value=.004+distance*.008;rightDelay.delayTime.value=.009+distance*.012;
-  leftPan.pan.value=-1;rightPan.pan.value=1;leftGain.gain.value=distance*.28;rightGain.gain.value=distance*.28;
+  leftPan.pan.value=-1;rightPan.pan.value=1;leftGain.gain.value=distance*.18;rightGain.gain.value=distance*.18;
   input.connect(leftDelay);leftDelay.connect(leftGain);leftGain.connect(leftPan);leftPan.connect(output);
   input.connect(rightDelay);rightDelay.connect(rightGain);rightGain.connect(rightPan);rightPan.connect(output);
 }
@@ -608,7 +623,7 @@ function connectTreatment(context,src,p,destination){
   const phoneAmount=phoneControl===0?0:Math.pow(phoneControl,1.15),crushAmount=crushControl===0?0:Math.pow(crushControl,1.25);
   src.playbackRate.value=Math.pow(2,fx.pitch/12);
   delay.delayTime.value=60/Number($('#bpm').value);
-  feedback.gain.value=Math.min(.72,fx.echo/120);echoWet.gain.value=Math.min(.8,fx.echo/100);
+  feedback.gain.value=Math.min(.52,fx.echo/150);echoWet.gain.value=Math.min(.52,fx.echo/135);
   dry.gain.value=1-phoneAmount;phoneWet.gain.value=phoneAmount;
   crushDry.gain.value=1-crushAmount;crushWet.gain.value=crushAmount;
   const bits=16-crushAmount*13,levels=Math.pow(2,bits-1),curve=new Float32Array(65536);
@@ -624,13 +639,13 @@ function connectTreatment(context,src,p,destination){
   pulseBus.connect(spatialBus);pulseBus.connect(delay);delay.connect(feedback);feedback.connect(delay);delay.connect(echoWet);echoWet.connect(spatialBus);
   if(fx.reverb>0){
     const reverbAmount=Math.pow(fx.reverb/100,.65),convolver=context.createConvolver(),reverbWet=context.createGain();
-    convolver.buffer=createReverbImpulse(context,reverbAmount);reverbWet.gain.value=Math.min(.78,reverbAmount*.72);
+    convolver.buffer=createReverbImpulse(context,reverbAmount);reverbWet.gain.value=Math.min(.48,reverbAmount*.46);
     pulseBus.connect(convolver);convolver.connect(reverbWet);reverbWet.connect(spatialBus);
   }
   // Echo and convolution reverb can sum above 0 dBFS. Leave headroom before
   // the dedicated compressor/limiter master chain to prevent digital clipping.
   const outputGain=context.createGain();
-  outputGain.gain.value=.9;
+  outputGain.gain.value=.58;
   connectMastering(context,outputGain,destination);
   connectWidth(context,spatialBus,outputGain,fx.width);
   return {rate:src.playbackRate.value,fx};
