@@ -523,7 +523,7 @@ function prepareSourceBuffer(context,buffer,p){
   const fx=effectValues(p);
   if(!fx.reverse&&fx.glitch===0)return buffer;
   const output=context.createBuffer(buffer.numberOfChannels,buffer.length,buffer.sampleRate);
-  const glitchAmount=fx.glitch===0?0:Math.pow(fx.glitch/100,.62);
+  const glitchControl=fx.glitch/100,glitchAmount=fx.glitch===0?0:Math.pow(glitchControl,.62);
   const beatSamples=Math.max(128,Math.round(buffer.sampleRate*(60/Number($('#bpm').value))/4));
   const affectedEvery=Math.max(1,Math.round(6-glitchAmount*5));
   const chopDivisions=2+Math.floor(glitchAmount*6);
@@ -535,13 +535,19 @@ function prepareSourceBuffer(context,buffer,p){
       if(glitchAmount>0){
         const block=Math.floor(i/beatSamples),local=i%beatSamples;
         if(block%affectedEvery===affectedEvery-1){
-          timelineIndex=block*beatSamples+(local%chopSamples);
           const edge=local%chopSamples;
           const fadeSamples=Math.max(64,Math.min(480,Math.floor(chopSamples/5)));
           const fadeIn=edge<fadeSamples?edge/fadeSamples:1;
           const fadeOut=edge>chopSamples-fadeSamples?(chopSamples-edge)/fadeSamples:1;
-          gain*=Math.max(0,Math.min(1,fadeIn,fadeOut));
-          blend=glitchAmount<.5?.38-glitchAmount*.46:.12;
+          const chopWindow=Math.max(0,Math.min(1,fadeIn,fadeOut));
+          if(glitchControl<.35){
+            const duck=.18+glitchControl*1.25;
+            gain*=1-duck*(1-chopWindow);
+          }else{
+            timelineIndex=block*beatSamples+(local%chopSamples);
+            gain*=chopWindow;
+            blend=glitchAmount<.5?.52-glitchAmount*.72:.16;
+          }
           if(glitchAmount>.55&&local>beatSamples*(1-glitchAmount*.18))gain*=.08;
         }
       }
@@ -588,7 +594,7 @@ function connectWidth(context,input,destination,widthValue){
 
 function connectPulseGate(context,input,output,amount,duration){
   if(amount<=0){input.connect(output);return;}
-  const control=amount/100,depth=Math.pow(control,.72),sharpness=Math.pow(control,1.35);
+  const control=amount/100,depth=Math.min(.62,Math.pow(control,.9)*.72),sharpness=Math.pow(control,1.8)*.55;
   const gate=context.createGain(),modulation=context.createGain(),oscillator=context.createOscillator();
   const real=new Float32Array(18),imaginary=new Float32Array(18);
   imaginary[1]=1;
