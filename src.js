@@ -524,19 +524,23 @@ function prepareSourceBuffer(context,buffer,p){
   for(let channel=0;channel<buffer.numberOfChannels;channel++){
     const input=buffer.getChannelData(channel),out=output.getChannelData(channel);
     for(let i=0;i<buffer.length;i++){
-      let timelineIndex=i,gain=1;
+      let timelineIndex=i,gain=1,blend=0;
       if(glitchAmount>0){
         const block=Math.floor(i/beatSamples),local=i%beatSamples;
         if(block%affectedEvery===affectedEvery-1){
           timelineIndex=block*beatSamples+(local%chopSamples);
           const edge=local%chopSamples;
-          const fadeSamples=Math.min(96,Math.floor(chopSamples/8));
-          if(edge<fadeSamples)gain=edge/fadeSamples;
+          const fadeSamples=Math.max(64,Math.min(480,Math.floor(chopSamples/5)));
+          const fadeIn=edge<fadeSamples?edge/fadeSamples:1;
+          const fadeOut=edge>chopSamples-fadeSamples?(chopSamples-edge)/fadeSamples:1;
+          gain*=Math.max(0,Math.min(1,fadeIn,fadeOut));
+          blend=glitchAmount<.5?.38-glitchAmount*.46:.12;
           if(glitchAmount>.55&&local>beatSamples*(1-glitchAmount*.18))gain*=.08;
         }
       }
       const sourceIndex=fx.reverse?buffer.length-1-Math.min(buffer.length-1,timelineIndex):Math.min(buffer.length-1,timelineIndex);
-      out[i]=input[sourceIndex]*gain;
+      const dryIndex=fx.reverse?buffer.length-1-i:i;
+      out[i]=input[sourceIndex]*gain*(1-blend)+input[dryIndex]*blend;
     }
   }
   return output;
