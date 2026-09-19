@@ -378,7 +378,7 @@ async function showDispatch(index,button){
     const reverbTail=fx.reverb>0?.35+Math.pow(fx.reverb/100,.7)*4.65:0;
     const duration=sourceBuffer.duration/rate+Math.max(echoTail,reverbTail)+.08;
     const offline=new OfflineAudioContext(Math.max(2,sourceBuffer.numberOfChannels),Math.ceil(duration*sourceBuffer.sampleRate),sourceBuffer.sampleRate);
-    const master=offline.createGain(),src=offline.createBufferSource();master.connect(offline.destination);master.gain.setValueAtTime(1,Math.max(0,duration-.04));master.gain.linearRampToValueAtTime(0,duration);
+    const master=offline.createGain(),src=offline.createBufferSource();connectMastering(offline,master,offline.destination);master.gain.setValueAtTime(1,Math.max(0,duration-.04));master.gain.linearRampToValueAtTime(0,duration);
     src.buffer=prepareSourceBuffer(offline,sourceBuffer,p);connectTreatment(offline,src,p,master);src.start();
     const rendered=await offline.startRendering();
     if(dispatchAudioUrl)URL.revokeObjectURL(dispatchAudioUrl);

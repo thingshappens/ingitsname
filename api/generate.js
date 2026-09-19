@@ -1,7 +1,14 @@
 const Stripe=require('stripe');
 const {isCreditStoreConfigured,ensureCreditPack,reserveCredit,releaseCredit}=require('../lib/credits');
 const {isOwner}=require('../lib/owner');
-const deliveries={commanding:'[commanding]',sinister:'[low and sinister]',whispered:'[whispers]',hype:'[shouts]',seductive:'[softly]',calm:'[calm]'};
+const deliveries={
+  commanding:'Perform the words with a clear, controlled and authoritative delivery.',
+  sinister:'Perform the words in a low, dark, restrained and menacing delivery. Do not shout.',
+  whispered:'Whisper the words softly and intimately. Do not project or shout.',
+  hype:'Perform the words with energetic, bright and excited hype. Do not whisper.',
+  seductive:'Perform the words softly, slowly and seductively.',
+  calm:'Perform the words calmly, evenly and naturally.'
+};
 const attempts=new Map();
 const pcm48ToWav=(pcm)=>{
   const data=Buffer.from(pcm),sampleRate=48000,channels=1,bitsPerSample=16,blockAlign=channels*bitsPerSample/8,byteRate=sampleRate*blockAlign;
@@ -55,7 +62,7 @@ module.exports=async function(req,res){
       const bytes=Buffer.from(await sound.arrayBuffer());return sendAudio(bytes);
     }
     if(!voiceId){await release();return res.status(400).json({error:'Select a voice'});}
-    const prompt=`${deliveries[delivery]||deliveries.commanding} ${String(text).trim()}`;
+    const prompt=`${deliveries[delivery]||deliveries.commanding} The exact words are: ${String(text).trim()}`;
     const voice=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=pcm_48000`,{method:'POST',headers:{'xi-api-key':process.env.ELEVENLABS_API_KEY,'content-type':'application/json'},body:JSON.stringify({text:prompt,model_id:'eleven_v3'})});
     if(!voice.ok){const data=await voice.json().catch(()=>({}));await release();return res.status(502).json({error:data.detail?.message||'Voice generation failed'});}
     return sendAudio(Buffer.from(await voice.arrayBuffer()));
