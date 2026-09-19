@@ -49,9 +49,9 @@ let checkoutReady = true;
 let generationAvailable = true;
 const presets = [
   {name:'Clean Reference',factor:0,clean:true},
-  {name:'Lightly Processed',factor:.5},
+  {name:'Lightly Processed',factor:.42},
   {name:'Your Choice',factor:1},
-  {name:'Heavily Processed',factor:1.35}
+  {name:'Heavily Processed',factor:1.18}
 ];
 const quickStyles = {
   vocal: [
@@ -62,7 +62,7 @@ const quickStyles = {
     {key:'phone-call',name:'Phone Call',pitch:-1,echo:14,phone:86,bitcrush:5,reverb:8,glitch:0,pulse:0,width:16,reverse:false,delivery:'commanding'},
     {key:'ghost-voice',name:'Ghost Voice',pitch:-3,echo:44,phone:0,bitcrush:8,reverb:78,glitch:8,pulse:22,width:80,reverse:true,delivery:'whispered'},
     {key:'digital-breakdown',name:'Digital Breakdown',pitch:-2,echo:24,phone:0,bitcrush:62,reverb:18,glitch:72,pulse:78,width:68,reverse:false,delivery:'hype'},
-    {key:'hype-drop',name:'Hype Drop',pitch:-6,echo:38,phone:0,bitcrush:12,reverb:26,glitch:8,pulse:36,width:76,reverse:false,delivery:'hype'}
+    {key:'hype-drop',name:'Hype Drop',pitch:-4,echo:28,phone:0,bitcrush:6,reverb:18,glitch:0,pulse:22,width:66,reverse:false,delivery:'hype'}
   ],
   fx: [
     {key:'custom',name:'Custom'},
