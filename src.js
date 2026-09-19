@@ -591,10 +591,10 @@ function connectMastering(context,input,destination){
   // do all of the brick-wall limiting work.
   const compressor=context.createDynamicsCompressor(),limiter=context.createDynamicsCompressor(),ceiling=context.createWaveShaper();
   compressor.threshold.value=-18;compressor.knee.value=12;compressor.ratio.value=3;compressor.attack.value=.012;compressor.release.value=.18;
-  limiter.threshold.value=-1;limiter.knee.value=0;limiter.ratio.value=20;limiter.attack.value=.001;limiter.release.value=.06;
+  limiter.threshold.value=-2;limiter.knee.value=0;limiter.ratio.value=20;limiter.attack.value=.001;limiter.release.value=.06;
   // DynamicsCompressor is deliberately responsive rather than sample-accurate.
   // This final ceiling catches any one-sample overshoot in previews and renders.
-  ceiling.curve=createCeilingCurve(-1);ceiling.oversample='4x';
+  ceiling.curve=createCeilingCurve(-2);ceiling.oversample='4x';
   input.connect(compressor);compressor.connect(limiter);limiter.connect(ceiling);ceiling.connect(destination);
   return {compressor,limiter,ceiling};
 }
@@ -661,12 +661,12 @@ async function downloadVariation(index,button){
     const rendered=await offline.startRendering(),blob=audioBufferToWav(applyExportCeiling(rendered)),url=URL.createObjectURL(blob),a=document.createElement('a');
     const phraseName=phrase.value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||(generationMode==='vocal'&&$('#vocalType').value==='dj-tag'?'hsc-dj-tag':'hsc-vocal');
     a.href=url;a.download=`${phraseName}-${p.name.toLowerCase().replace(/\s+/g,'-')}.wav`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-    $('#status').textContent=`${p.name} downloaded as a 48 kHz WAV with a −1 dBFS ceiling.`;
+    $('#status').textContent=`${p.name} downloaded as a 48 kHz WAV with a −2 dBFS ceiling.`;
   }catch(e){$('#status').textContent=`WAV export failed: ${e.message}`;}
   finally{button.disabled=false;button.textContent=original;}
 }
 
-function applyExportCeiling(buffer,ceilingDb=-1){
+function applyExportCeiling(buffer,ceilingDb=-2){
   const ceiling=Math.pow(10,ceilingDb/20);let peak=0;
   for(let channel=0;channel<buffer.numberOfChannels;channel++){
     const data=buffer.getChannelData(channel);
