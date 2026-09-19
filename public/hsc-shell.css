@@ -14,4 +14,4 @@
    product navigation from competing for the same narrow horizontal line. */
 @media(max-width:1180px){.hsc-shell{grid-template-columns:1fr;justify-items:center;gap:13px;padding:17px 24px 15px}.hsc-shell .brand{justify-content:center}.hsc-nav{justify-content:center;flex-wrap:wrap;row-gap:9px}.hsc-context{display:none}}
 
-@media(max-width:700px){.hsc-shell{padding:15px 18px 14px;gap:12px}.hsc-shell .brand img{width:31px;height:31px}.hsc-shell .brand>span{font-size:8px;letter-spacing:.11em}.hsc-shell .brand small{font-size:6px;max-width:180px}.hsc-nav{gap:10px 14px;font-size:7px;letter-spacing:.1em}.hsc-nav a:last-child{display:none}}
+@media(max-width:700px){.hsc-shell{padding:15px 18px 14px;gap:12px}.hsc-shell .brand img{width:31px;height:31px}.hsc-shell .brand>span{font-size:8px;letter-spacing:.11em}.hsc-shell .brand small{font-size:6px;max-width:180px}.hsc-nav{gap:10px 14px;font-size:7px;letter-spacing:.1em;line-height:1.8}}
