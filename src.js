@@ -51,7 +51,7 @@ const presets = [
   {name:'Clean Reference',factor:0,clean:true},
   {name:'Lightly Processed',factor:.42},
   {name:'Your Choice',factor:1},
-  {name:'Heavily Processed',factor:1.18}
+  {name:'Heavily Processed',factor:1.16,heavy:true}
 ];
 const quickStyles = {
   vocal: [
@@ -359,17 +359,24 @@ $('#generate').addEventListener('click',async()=>{
 function effectValues(p){
   const scale=p.clean?0:p.factor;
   const widthBase=Number($('#width').value);
-  return {
-    pitch:p.clean?0:Math.max(-12,Math.min(12,Number($('#pitch').value)*scale)),
-    echo:p.clean?0:Math.min(100,Number($('#echo').value)*scale),
-    phone:p.clean||sourceMode==='fx'?0:Math.min(100,Number($('#phone').value)*scale),
-    bitcrush:p.clean?0:Math.min(100,Number($('#bitcrush').value)*scale),
-    reverb:p.clean?0:Math.min(100,Number($('#reverb').value)*scale),
-    glitch:p.clean?0:Math.min(100,Number($('#glitch').value)*scale),
-    pulse:p.clean?0:Math.min(100,Number($('#pulse').value)*scale),
-    width:p.clean?50:Math.max(0,Math.min(100,50+(widthBase-50)*scale)),
-    reverse:!p.clean&&reverseEnabled,
-  };
+  const basePitch=Number($('#pitch').value);
+  let pitch=p.clean?0:Math.max(-12,Math.min(12,basePitch*scale));
+  let echo=p.clean?0:Math.min(100,Number($('#echo').value)*scale);
+  let phone=p.clean||sourceMode==='fx'?0:Math.min(100,Number($('#phone').value)*scale);
+  let bitcrush=p.clean?0:Math.min(100,Number($('#bitcrush').value)*scale);
+  let reverb=p.clean?0:Math.min(100,Number($('#reverb').value)*scale);
+  let glitch=p.clean?0:Math.min(100,Number($('#glitch').value)*scale);
+  let pulse=p.clean?0:Math.min(100,Number($('#pulse').value)*scale);
+  let width=p.clean?50:Math.max(0,Math.min(100,50+(widthBase-50)*scale));
+  if(p.heavy){
+    pitch=Math.max(-12,Math.min(12,pitch+(basePitch<=0?-1.2:.8)));
+    echo=Math.min(100,echo+8);
+    bitcrush=Math.min(100,bitcrush+8);
+    reverb=Math.min(100,reverb+10);
+    pulse=Math.min(100,pulse+14);
+    width=Math.max(0,Math.min(100,widthBase>=50?Math.min(width,92):width-8));
+  }
+  return {pitch,echo,phone,bitcrush,reverb,glitch,pulse,width,reverse:!p.clean&&reverseEnabled};
 }
 
 function renderVariations(){
