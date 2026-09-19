@@ -408,9 +408,9 @@ async function showDispatch(index,button){
     const text=phrase.value.trim()||'Drop the bass',bpm=$('#bpm').value||128,style=p.name;
     $('#dispatchPhrase').textContent=text.toUpperCase();$('#dispatchMeta').textContent=`${bpm} BPM · ${style.toUpperCase()} · 48 kHz WAV`;
     $('#dispatchAudio').src=dispatchAudioUrl;
-    $('#dispatchReels').textContent=`“${text}” · ${style}. Four vocal cuts. One idea. #HauteSoundCouture #Producer`;
+    $('#dispatchReels').textContent=`“${text}” · ${style}. Your phrase. Your sound. #HauteSoundCouture #Producer`;
     $('#dispatchTikTok').textContent=`Built in the Atelier: ${style} vocal cut at ${bpm} BPM.`;
-    $('#dispatchShorts').textContent=`One phrase. One ${style.toLowerCase()} treatment. Made for the drop.`;
+    $('#dispatchShorts').textContent=`One phrase. One ${style.toLowerCase()} treatment. Made by you, finished for the drop.`;
     $('#dispatch').hidden=false;$('#dispatch').scrollIntoView({behavior:'smooth',block:'nearest'});
     track('dispatch_cut_selected',{cut:p.name,bpm:Number(bpm)});$('#status').textContent=`${p.name} prepared for Atelier Dispatch.`;
   }catch(e){$('#status').textContent=`Dispatch preview failed: ${e.message}`;}

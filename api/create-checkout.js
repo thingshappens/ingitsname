@@ -1,4 +1,5 @@
 const Stripe = require('stripe');
+const paddle = require('../lib/edit/paddle');
 
 const FOUR_CUT_PRICE_CENTS = 900;
 const PACK_PRICE_CENTS = 3900;
@@ -15,6 +16,10 @@ function requireStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY);
 }
 
+function paymentProvider() {
+  return process.env.ATELIER_PAYMENT_PROVIDER === 'paddle' ? 'paddle' : 'stripe';
+}
+
 module.exports = async function (req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -24,7 +29,6 @@ module.exports = async function (req, res) {
   }
 
   try {
-    const stripe = requireStripe();
     const origin = originFromRequest(req);
     const isPack = plan === 'producer_pack';
     const productImage = `${origin}/${isPack ? 'hsc-producer-pack.jpg' : 'hsc-four-cuts.jpg'}`;
@@ -33,6 +37,22 @@ module.exports = async function (req, res) {
       return res.status(503).json({ error: 'Producer Pack is not available yet' });
     }
 
+    if (paymentProvider() === 'paddle') {
+      const priceId = isPack ? process.env.PADDLE_PRICE_ATELIER_PACK : process.env.PADDLE_PRICE_ATELIER_4;
+      if (!priceId) throw new Error('Paddle checkout is not connected yet');
+      const transaction = await paddle.request('/transactions', { method: 'POST', body: {
+        items: [{ price_id: priceId, quantity: 1 }],
+        custom_data: {
+          product_key: isPack ? 'hsc_sample_atelier_producer_pack' : 'hsc_sample_atelier_four_cuts',
+          generation_id: String(generationId)
+        },
+        checkout: { url: `${origin}/?checkout=success` }
+      }});
+      if (typeof transaction?.id !== 'string' || typeof transaction?.checkout?.url !== 'string') throw new Error('Paddle checkout did not return a checkout URL');
+      return res.status(200).json({ id: transaction.id, url: transaction.checkout.url });
+    }
+
+    const stripe = requireStripe();
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       // Atelier uses on-demand product data for each fitting. Keep Stripe's
