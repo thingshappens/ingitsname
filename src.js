@@ -47,6 +47,12 @@ let producerPackAvailable = false;
 let producerPackCheckoutReady = false;
 let checkoutReady = true;
 let generationAvailable = true;
+
+async function resumePlayback(){
+  audioContext ||= new AudioContext();
+  if(audioContext.state==='suspended')await audioContext.resume();
+  return audioContext;
+}
 const presets = [
   {name:'Clean Reference',factor:0,clean:true},
   {name:'Lightly Processed',factor:.42},
@@ -295,16 +301,22 @@ $('#recordVoiceButton').addEventListener('click',async()=>{
     mediaRecorder.addEventListener('dataavailable',event=>{if(event.data.size)chunks.push(event.data);});
     mediaRecorder.addEventListener('stop',async()=>{
       try{
+        // Release the mobile microphone session before preparing playback. On
+        // iOS this prevents a just-recorded take from remaining in the quiet
+        // call/receiver audio route.
+        recordingStream?.getTracks().forEach(track=>track.stop());
+        recordingStream=null;
         const blob=new Blob(chunks,{type:mediaRecorder?.mimeType||'audio/webm'});
         const bytes=await blob.arrayBuffer();
-        audioContext ||= new AudioContext();
+        await resumePlayback();
         sourceBuffer=await audioContext.decodeAudioData(bytes);
         sourceBuffer=addSourceHeadroom(await resampleTo48k(sourceBuffer));
         sourceMode='recorded';currentGenerationId=crypto.randomUUID();isPaid=false;paidViaPack=false;
         updateGenerationAvailability();
         if(recordingUrl)URL.revokeObjectURL(recordingUrl);
         recordingUrl=URL.createObjectURL(blob);
-        $('#recordingPreview').src=recordingUrl;$('#recordingPreview').hidden=false;
+        const preview=$('#recordingPreview');
+        preview.src=recordingUrl;preview.volume=1;preview.muted=false;preview.playsInline=true;preview.hidden=false;
         updatePurchaseVisibility();renderVariations();
         $('#status').textContent='Your take is ready. Shape it with the processing controls, then download 48 kHz WAVs.';
         track('local_voice_recorded',{mode:'vocal'});
@@ -668,9 +680,9 @@ function connectTreatment(context,src,p,destination){
   return {rate:src.playbackRate.value,fx};
 }
 
-function playVariation(index,button){
+async function playVariation(index,button){
   if(!sourceBuffer)return;
-  audioContext ||= new AudioContext();
+  await resumePlayback();
   if(activeSource){try{activeSource.stop()}catch{}}
   document.querySelectorAll('.play').forEach(b=>b.textContent='▶');
   const p=presets[index],src=audioContext.createBufferSource();
