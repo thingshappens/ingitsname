@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hsc",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "alias": { "ffmpeg-static": "./worker/ffmpeg-stub.js" },
+  "observability": { "enabled": true },
+  "vars": {
+    "VERCEL_ENV": "production",
+    "THE_EDIT_ORIGIN": "https://hautesoundcouture.com/"
+  }
+}
