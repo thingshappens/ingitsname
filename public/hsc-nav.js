@@ -17,7 +17,7 @@
     { href: 'https://hautesoundcouture.com/#house', label: 'The Maison' }
   ];
 
-  var CSS = ".hsc-shell{min-height:92px;padding:0 clamp(22px,4.8vw,78px);display:grid;grid-template-columns:minmax(260px,1fr) auto minmax(260px,1fr);align-items:center;gap:30px;border-bottom:1px solid var(--line,#2a2620)}" +
+  var CSS = "html{scroll-behavior:smooth}.hsc-shell{min-height:92px;padding:0 clamp(22px,4.8vw,78px);display:grid;grid-template-columns:minmax(260px,1fr) auto minmax(260px,1fr);align-items:center;gap:30px;border-bottom:1px solid var(--line,#2a2620)}" +
     ".hsc-shell .brand{display:flex;align-items:center;gap:11px;min-width:0;text-decoration:none;color:inherit}" +
     ".hsc-shell .brand img{width:42px;height:42px;object-fit:contain;flex:none}" +
     ".hsc-shell .brand>span{font:500 10px 'DM Mono',monospace;letter-spacing:.14em;white-space:nowrap}" +
