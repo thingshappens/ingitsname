@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0d0c0b">
+  <title>The Maison — Haute Sound Couture</title>
+  <meta name="description" content="The people behind Haute Sound Couture — dossiers, questionable job titles and the Maison podcast.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QGMG5DTDXQ"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-QGMG5DTDXQ');gtag('config','AW-18419497110');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/hsc-site.css">
+</head>
+<body>
+  <div id="hsc-shell-mount" data-subtitle="THE MAISON · THE PEOPLE BEHIND HSC"></div><script src="/hsc-nav.js"></script>
+
+  <main>
+    <section class="hero" style="min-height:520px">
+      <div>
+        <p class="eyebrow">The people behind HSC</p>
+        <h1>Meet the <em>maison.</em></h1>
+        <p class="lede">An eccentric assembly of taste, craft, questionable job titles and one unusually sensitive bullshit filter. Read the dossiers. Then listen to what actually happens at the office.</p>
+        <div class="actions"><a class="btn" href="#podcast">Listen to the podcast ↓</a><a class="btn ghost" href="#dossiers">Read the dossiers ↓</a></div>
+      </div>
+      <img class="hero-mark" src="/home/hsc-emblem.png" alt="">
+    </section>
+
+    <section class="section panel" id="podcast">
+      <p class="eyebrow">The Maison podcast</p>
+      <h2 style="font-size:clamp(38px,4.5vw,64px)">Recorded at the office. <em>Unfortunately.</em></h2>
+      <p class="lede">Meetings, conflicts and the occasional breakthrough — captured where they happen. New episodes publish here in order, so you can scroll the dossiers while you listen.</p>
+      <div class="episodes" id="episodes"></div>
+    </section>
+
+    <section class="section" id="dossiers">
+      <p class="eyebrow">Dossiers</p>
+      <h2 style="font-size:clamp(38px,4.5vw,64px)">Who's <em>who.</em></h2>
+      <div class="team" id="team"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Haute Sound Couture © 2026</span>
+    <em>Original sounds · Made with intent</em>
+    <a href="/">Back to Home</a>
+  </footer>
+  <script src="/hsc-team.js"></script>
+  <script>
+    HSC_TEAM.render(document.getElementById('team'));
+    // Episodes: add newest last. {no, title, blurb, date, src} — src = audio URL (R2), omit while unreleased.
+    var EPISODES=[
+      {no:'01',title:'Episode one',blurb:'Coming soon.',date:'Coming soon'}
+    ];
+    document.getElementById('episodes').innerHTML=EPISODES.map(function(e){
+      var body='<div><h3>'+e.title+'</h3><p>'+e.blurb+'</p>'+(e.src?'<audio controls preload="none" src="'+e.src+'" style="width:100%;margin-top:14px"></audio>':'')+'</div>';
+      return '<article class="episode'+(e.src?'':' soon')+'"><span class="no">EP '+e.no+'</span>'+body+'<span class="when">'+e.date+'</span></article>';
+    }).join('');
+  </script>
+</body>
+</html>

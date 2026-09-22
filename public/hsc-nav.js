@@ -14,7 +14,7 @@
     { href: 'https://theedit.hautesoundcouture.com/edit/', label: 'The Edit' },
     { href: 'https://tailor.hautesoundcouture.com/', label: 'Tailor' },
     { href: 'https://hautesoundcouture.com/#free-samples', label: 'Free Samples' },
-    { href: 'https://hautesoundcouture.com/#house', label: 'The Maison' }
+    { href: 'https://hautesoundcouture.com/maison/', label: 'The Maison' }
   ];
 
   var CSS = "html{scroll-behavior:smooth}.hsc-shell{min-height:92px;padding:0 clamp(22px,4.8vw,78px);display:grid;grid-template-columns:minmax(260px,1fr) auto minmax(260px,1fr);align-items:center;gap:30px;border-bottom:1px solid var(--line,#2a2620)}" +
