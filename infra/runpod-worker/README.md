@@ -1,12 +1,16 @@
 # HSC RunPod worker
 
 This is the private queue worker for The Edit. It runs the pinned Voicebox
-source locally, accepts only the configured HSC profile IDs, and exposes two
+source locally, accepts only the configured HSC profile IDs, and exposes four
 RunPod job actions:
 
 - `generate` — dry English Qwen 1.7B generation (maximum `HSC_MAX_TEXT_LENGTH`)
 - `sexy_synthetic` — approved WORLD -10 semitone transform of a 48 kHz WAV
 - `import_profile` — one-time import from the private mounted ZIP archive
+- `render` — runs The Edit's production ffmpeg DSP chain (lib/edit/render.js,
+  copied verbatim into edit-render/) via Node, since Cloudflare Workers cannot
+  execute ffmpeg. The Worker forwards its render(pcm,cut,order) call here
+  whenever THE_EDIT_REMOTE_RENDER=1 is set (see wrangler.jsonc vars).
 
 Required endpoint environment variables:
 
@@ -15,6 +19,8 @@ Required endpoint environment variables:
 - `VOICEBOX_DATA_DIR`: `/runpod-volume/voicebox-data`
 - `VOICEBOX_MODELS_DIR`: `/runpod-volume/model-cache`
 - `HSC_PROFILE_ARCHIVE`: `/runpod-volume/felix2/felix2-profile.zip`
+- `THE_EDIT_FFMPEG_PATH`: `ffmpeg` (system binary, set in the Dockerfile — the
+  render action uses this instead of the npm ffmpeg-static package)
 
 The worker returns audio as base64 only inside the authenticated RunPod job
 result. It never exposes Voicebox's port, profiles, or generated-audio routes.

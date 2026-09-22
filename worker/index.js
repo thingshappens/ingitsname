@@ -61,6 +61,10 @@ async function runHandler(handler, request, rawBody) {
 
 export default {
   async fetch(request, env) {
+    // Cloudflare hands secrets/vars in via env, not process.env — but every
+    // handler imported unchanged from Vercel reads process.env.*, so mirror
+    // it in on each request (idempotent, cheap).
+    for (const k in env) if (typeof env[k] === "string") process.env[k] = env[k];
     const url = new URL(request.url);
     const target = HOST_REDIRECT[url.hostname];
     // Old subdomain links land on the right section; API calls and shared files still answer there.

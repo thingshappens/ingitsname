@@ -134,6 +134,41 @@ def import_profile(payload: dict[str, Any]) -> dict[str, Any]:
     return {"profile_id": profile_id, "name": profile.get("name")}
 
 
+def render(payload: dict[str, Any]) -> dict[str, Any]:
+    """Runs the exact production render.js (ffmpeg DSP chain) unchanged.
+
+    Cloudflare Workers cannot execute ffmpeg, so the Worker's render() call
+    is forwarded here (THE_EDIT_REMOTE_RENDER=1) and shells out to Node,
+    which runs the same code path Vercel used to run in-process.
+    """
+    pcm_b64 = payload.get("pcm_base64")
+    cut = payload.get("cut")
+    order = payload.get("order")
+    if not isinstance(pcm_b64, str) or not isinstance(cut, dict) or not isinstance(order, dict):
+        return fail("Render request is invalid")
+    if len(pcm_b64) > 24 * 1024 * 1024:
+        return fail("Render request is invalid")
+    import json as _json
+    try:
+        proc = subprocess.run(
+            ["node", "/app/edit-render/cli.js"],
+            input=_json.dumps({"pcmBase64": pcm_b64, "cut": cut, "order": order}).encode("utf-8"),
+            capture_output=True,
+            timeout=60,
+        )
+    except subprocess.TimeoutExpired:
+        return fail("Render timed out")
+    if proc.returncode != 0:
+        return fail(f"Render failed: {proc.stderr.decode('utf-8', 'replace')[:500]}")
+    try:
+        result = _json.loads(proc.stdout.decode("utf-8"))
+    except ValueError:
+        return fail("Render returned invalid output")
+    if not isinstance(result.get("audioBase64"), str) or not isinstance(result.get("metrics"), dict):
+        return fail("Render returned invalid output")
+    return {"audio_base64": result["audioBase64"], "metrics": result["metrics"]}
+
+
 def sexy_synthetic(payload: dict[str, Any]) -> dict[str, str]:
     encoded = payload.get("audio_base64")
     if not isinstance(encoded, str):
@@ -172,6 +207,8 @@ def handler(event: dict[str, Any]) -> dict[str, Any]:
         return import_profile(payload)
     if action == "sexy_synthetic":
         return sexy_synthetic(payload)
+    if action == "render":
+        return render(payload)
     return fail("Action is invalid")
 
 
