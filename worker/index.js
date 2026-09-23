@@ -89,7 +89,7 @@ export default {
     }
     // Public Paddle.js config (client-side tokens are safe to expose by design).
     if (url.pathname === '/api/paddle-client') {
-      return new Response(JSON.stringify({ environment: env.PADDLE_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'production', token: env.PADDLE_CLIENT_TOKEN || null }), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+      return new Response(JSON.stringify({ environment: String(env.PADDLE_ENVIRONMENT || '').trim().toLowerCase() === 'sandbox' ? 'sandbox' : 'production', envState: typeof env.PADDLE_ENVIRONMENT + ':' + String(env.PADDLE_ENVIRONMENT || '').length, token: env.PADDLE_CLIENT_TOKEN || null }), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
     }
     if (url.pathname.startsWith('/api/admin/')) return admin(request, env, url);
     const target = HOST_REDIRECT[url.hostname];
