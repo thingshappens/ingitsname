@@ -23,7 +23,6 @@ const API = {
 const HOST_REDIRECT = {
   'atelier.hautesoundcouture.com': '/atelier/',
   'theedit.hautesoundcouture.com': '/edit/',
-  'tailor.hautesoundcouture.com': '/tailor/',
   'www.hautesoundcouture.com': '/'
 };
 const CANONICAL = 'https://hautesoundcouture.com';
