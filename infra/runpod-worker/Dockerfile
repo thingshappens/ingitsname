@@ -6,7 +6,13 @@ ARG VOICEBOX_REF=51f49dea198384b4eb6087b72c17057c6eb1c1cd
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg git libsndfile1 build-essential \
+    ffmpeg git libsndfile1 build-essential curl \
+  && rm -rf /var/lib/apt/lists/*
+
+# Node runs The Edit's ffmpeg-based render chain unchanged (same render.js
+# as production), since Cloudflare Workers cannot execute ffmpeg itself.
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+  && apt-get install -y --no-install-recommends nodejs \
   && rm -rf /var/lib/apt/lists/*
 
 # Pin Voicebox so a later upstream change cannot silently change Felix's
@@ -20,12 +26,14 @@ RUN git clone https://github.com/jamiepine/voicebox.git /opt/voicebox \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY handler.py ./
+COPY edit-render ./edit-render
 
 ENV PYTHONPATH=/opt/voicebox \
     PYTHONUNBUFFERED=1 \
     HSC_MAX_TEXT_LENGTH=220 \
     VOICEBOX_DATA_DIR=/runpod-volume/voicebox-data \
     VOICEBOX_MODELS_DIR=/runpod-volume/model-cache \
-    HSC_PROFILE_ARCHIVE=/runpod-volume/felix2/felix2-profile.zip
+    HSC_PROFILE_ARCHIVE=/runpod-volume/felix2/felix2-profile.zip \
+    THE_EDIT_FFMPEG_PATH=ffmpeg
 
 CMD ["python", "-u", "/app/handler.py"]

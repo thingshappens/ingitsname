@@ -1,0 +1,185 @@
+const fs=require('node:fs/promises');
+const os=require('node:os');
+const path=require('node:path');
+const {execFile}=require('node:child_process');
+const {promisify}=require('node:util');
+const run=promisify(execFile);
+const {VERSION}=require('./model');
+const voicebox=require('./voicebox');
+const SR=48000;
+function binary(){return process.env.THE_EDIT_FFMPEG_PATH||require('ffmpeg-static');}
+async function ff(args){return run(binary(),['-hide_banner','-nostdin','-y',...args],{timeout:45000,maxBuffer:1024*1024});}
+function pcmFloats(pcm){
+  if(!pcm.length||pcm.length%2||pcm.length>SR*2*25)throw new Error('Invalid source length');
+  return Float32Array.from({length:pcm.length/2},(_,i)=>pcm.readInt16LE(i*2)/32768);
+}
+function floatBytes(samples){const b=Buffer.alloc(samples.length*4);samples.forEach((v,i)=>b.writeFloatLE(v,i*4));return b;}
+function gate(samples,bpm,groove,amount){
+  // Tempo-locked vocal stabs. Each audible window repeats a small piece of its
+  // own source, so Chop is audible as a treatment rather than merely a mute.
+  const cycle=SR*60/bpm/({straight:1,triplet:1.5,double:2}[groove]);
+  const on=Math.floor(cycle*(amount==='half'?.52:.28));
+  const repeat=Math.max(80,Math.floor(on/(amount==='half'?2:3)));
+  const bed=amount==='half'?.055:.035;
+  const fade=Math.min(128,Math.floor(repeat/6));
+  return Float32Array.from(samples,(v,i)=>{
+    const phase=i%cycle;
+    if(phase>=on)return v*bed;
+    const within=phase%repeat;
+    const edge=Math.min(within,repeat-within);
+    const envelope=Math.min(1,edge/fade);
+    const source=Math.min(samples.length-1,i-phase+within);
+    return samples[source]*(bed+(1-bed)*envelope);
+  });
+}
+function robot(samples,bpm){
+  // Fixed adaptation of Atelier's Glitch: short, tempo-locked source repeats
+  // at deliberate intervals, without the unrelated bitcrusher character.
+  // Exact Digital Breakdown source settings from Atelier: Glitch 72.
+  const glitchAmount=Math.pow(.72,.62);
+  const beat=Math.max(128,Math.round(SR*60/bpm/4));
+  const affectedEvery=Math.max(1,Math.round(6-glitchAmount*5));
+  const chopDivisions=2+Math.floor(glitchAmount*6);
+  const slice=Math.max(64,Math.floor(beat/chopDivisions));
+  return Float32Array.from(samples,(v,i)=>{
+    const block=Math.floor(i/beat),local=i%beat;
+    if(block%affectedEvery!==affectedEvery-1)return v;
+    const edge=local%slice,fade=Math.min(96,Math.floor(slice/8));
+    const gain=(edge<fade?edge/fade:1)*(local>beat*(1-glitchAmount*.18)?.08:1);
+    const idx=Math.min(samples.length-1,block*beat+edge);
+    return samples[idx]*gain;
+  });
+}
+function crush(samples,amount=.62){
+  // Port of Atelier's Digital Breakdown crush: mostly a textured parallel layer,
+  // never a full novelty-bitcrusher that destroys the words.
+  const wet=Math.pow(amount,1.25),bits=16-wet*13,levels=Math.pow(2,bits-1);
+  return Float32Array.from(samples,v=>{
+    const reduced=Math.round(v*levels)/levels;
+    return v*(1-wet)+reduced*wet;
+  });
+}
+function pulse(samples,bpm,amount=78){
+  // Digital Breakdown's Atelier pulse: 78, BPM / 30, with its odd harmonics.
+  const depth=Math.pow(amount/100,.72),sharpness=Math.pow(amount/100,1.35);
+  const cycle=SR*30/bpm;
+  const normalizer=1+Array.from({length:8},(_,i)=>sharpness/(3+i*2)).reduce((a,b)=>a+b,0);
+  return Float32Array.from(samples,(v,i)=>{
+    const phase=(i%cycle)/cycle;
+    let wave=Math.sin(2*Math.PI*phase);
+    for(let harmonic=3;harmonic<18;harmonic+=2)wave+=Math.sin(2*Math.PI*phase*harmonic)*sharpness/harmonic;
+    wave=Math.max(-1,Math.min(1,wave/normalizer));
+    return v*(1-depth/2+depth/2*wave);
+  });
+}
+function hasSibilance(samples){let high=0,total=0,prev=0;for(const v of samples){high+=(v-prev)**2;total+=v*v;prev=v;}return total>0&&high/total>.38;}
+function filters(c,order,samples){
+  let style=[];
+  if(c.style==='flat_tag'||c.style==='clean'){
+    // This is the reference render, not a disguised effect preset.  The voice
+    // stays at its original pitch and timing with no echo, EQ, compression or
+    // de-essing.  The export stage below only provides peak-safe delivery.
+    return `afade=t=out:st=${Math.max(0,samples.length/SR-.012)}:d=0.012`;
+  }
+  if(c.style==='dark_echo'){
+    // One intelligible design gesture: a restrained three-semitone drop and a
+    // single dotted-eighth echo, locked to the customer BPM. Do not add EQ,
+    // extra repeat taps, room reflections or another character effect here.
+    const rate=2**(-3/12),delay=Math.round(60000/order.bpm*.75);
+    style=[`asetrate=${SR*rate}`,`aresample=${SR}`,`atempo=${1/rate}`,`asplit=2[lead][echo];[echo]aecho=0.8:0.5:${delay}:0.18[echoout];[lead][echoout]amix=inputs=2:normalize=0`];
+  }
+  if(c.style==='sexy_robot'){
+    if(order.runpodSexySynthetic){
+      // The GPU owns this deliberately versioned transform. The local renderer
+      // only exports its result safely; it must not add a second synthetic
+      // character on top.
+      return `afade=t=out:st=${Math.max(0,samples.length/SR-.012)}:d=0.012`;
+    }
+    // Tight Robot is a metallic close-mic treatment, not a pile of "digital"
+    // effects. Candidate v5 retains the statement synthetic texture and adds
+    // only a short dense micro-plate. It has no rhythmic echo, gate or long
+    // room tail, so articulation remains dry and immediate.
+    const rate=2**(-1.5/12);
+    const candidate=order.internalRobotCandidate||'v5';
+    const robot=candidate==='v2'
+      ?{flanger:'flanger=delay=8:depth=4:regen=14:width=82:speed=0.35:shape=s:phase=25:interp=linear',crusher:'acrusher=bits=12:mix=0.10:aa=1:samples=1'}
+      :candidate==='v3'
+        ?{flanger:'flanger=delay=10:depth=7:regen=28:width=92:speed=0.35:shape=s:phase=25:interp=linear',crusher:'acrusher=bits=9:mix=0.32:aa=1:samples=1'}
+        :{flanger:'flanger=delay=14:depth=9:regen=48:width=100:speed=0.30:shape=s:phase=25:interp=linear',crusher:'acrusher=bits=6:mix=0.55:aa=1:samples=1'};
+    style=[`asetrate=${SR*rate}`,`aresample=${SR}`,`atempo=${1/rate}`,robot.flanger,robot.crusher,...(candidate==='v5'?['aecho=0.8:0.9:23|47|83:0.16|0.09|0.04']:[])];
+  }
+  if(c.style==='chopped_up'){
+    // The Chop rhythm sits on Atelier's Digital Breakdown texture: a restrained
+    // one-beat echo plus short room reflections, rather than a dry on/off gate.
+    const rate=2**(-2/12),delay=60000/order.bpm;
+    style=[`asetrate=${SR*rate}`,`aresample=${SR}`,`atempo=${1/rate}`,`asplit=3[lead][echo][room];[echo]lowpass=f=4200,aecho=0.8:0.24:${delay}:0.20[echoout];[room]aecho=0.8:0.55:38|76|126|186:0.18|0.12|0.08|0.04[roomout];[lead][echoout][roomout]amix=inputs=3:normalize=0`];
+  }
+  const duration=samples.length/SR+(c.style==='dark_echo'?60/order.bpm*2.25:c.style==='sexy_robot'?60/order.bpm*1.25:c.style==='chopped_up'?60/order.bpm*.5:0);
+  return ['highpass=f=65',...(hasSibilance(samples)?['deesser=i=0.15:m=0.35:f=0.5']:[]),...style,'acompressor=threshold=0.12:ratio=2:attack=8:release=100:makeup=1.25',`afade=t=out:st=${Math.max(0,duration-.012)}:d=0.012`].join(',');
+}
+async function measure(file){
+  const {stderr}=await ff(['-i',file,'-af','loudnorm=I=-18:TP=-1:LRA=7:print_format=json','-f','null','-']);
+  const data=JSON.parse(stderr.slice(stderr.lastIndexOf('{'),stderr.lastIndexOf('}')+1));
+  const result={lufs:Number(data.input_i),truePeak:Number(data.input_tp)};
+  if(!Number.isFinite(result.truePeak))throw new Error('Silent or invalid render');
+  return result;
+}
+async function render(pcm,cut,order){
+  if(process.env.THE_EDIT_REMOTE_RENDER==='1'){
+    // ffmpeg cannot run in Cloudflare Workers; delegate the full DSP chain
+    // to the RunPod worker, which runs this exact render() via cli.js.
+    const remote=await require('./voicebox').run('render',{pcm_base64:pcm.toString('base64'),cut,order});
+    if(typeof remote.audio_base64!=='string'||!remote.metrics)throw new Error('Remote render returned no audio');
+    return {buffer:Buffer.from(remote.audio_base64,'base64'),metrics:remote.metrics};
+  }
+  if(cut.recipeVersion!==VERSION)throw new Error('Unavailable recipe version');
+  let samples=pcmFloats(pcm);
+  if(cut.style==='chopped_up'){
+    // Direct Digital Breakdown port: Glitch 72, Bitcrush 62 and Pulse 78.
+    // The customer choices only vary pulse density/depth; they no longer add a
+    // second unrelated gate on top of the Atelier treatment.
+    const density={straight:1,triplet:1.5,double:2}[cut.groove];
+    const pulseAmount=cut.cutAmount==='half'?78:88;
+    samples=pulse(crush(robot(samples,order.bpm)),order.bpm*density,pulseAmount);
+  }
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'hsc-edit-'));
+  try{
+    const input=path.join(dir,'source.f32'),effect=path.join(dir,'effect.wav'),output=path.join(dir,'cut.wav');
+    await fs.writeFile(input,floatBytes(samples));
+    const runpodSexy=Boolean(process.env.THE_EDIT_RUNPOD_ENDPOINT_ID&&process.env.THE_EDIT_RUNPOD_API_KEY&&cut.style==='sexy_robot');
+    if(runpodSexy){
+      const source=path.join(dir,'source.wav'),transformed=path.join(dir,'sexy.wav');
+      await ff(['-f','f32le','-ar',String(SR),'-ac','1','-i',input,'-c:a','pcm_s16le',source]);
+      await fs.writeFile(transformed,await voicebox.sexySynthetic(await fs.readFile(source)));
+      await ff(['-i',transformed,'-ar',String(SR),'-ac','1','-f','f32le',input]);
+      samples=pcmFloats(await fs.readFile(input));
+    }
+    const renderOrder=runpodSexy?{...order,runpodSexySynthetic:true}:order;
+    await ff(['-f','f32le','-ar',String(SR),'-ac','1','-i',input,'-filter_complex',filters(cut,renderOrder,samples),'-ar',String(SR),'-c:a','pcm_f32le',effect]);
+    const stats=await measure(effect);
+    // Constant gain preserves the chopped phrase envelope. Oversampled
+    // loudnorm protects peaks; a second measurement checks the actual 48 kHz WAV.
+    const gain=Math.min(12,-18-(Number.isFinite(stats.lufs)?stats.lufs:-18),-1.5-stats.truePeak);
+    await ff(['-i',effect,'-af',`volume=${gain}dB,aresample=192000,alimiter=limit=0.84:attack=5:release=50:level=false:latency=true,aresample=48000`,'-ar',String(SR),'-c:a','pcm_s24le',output]);
+    let final=await measure(output);
+    if(final.truePeak> -1.05){
+      const safer=path.join(dir,'safe.wav');
+      await ff(['-i',output,'-af',`volume=${-1.2-final.truePeak}dB`,'-c:a','pcm_s24le',safer]);
+      await fs.rename(safer,output);final=await measure(output);
+    }
+    if(final.truePeak> -1)throw new Error('Audio peak check failed');
+    return {buffer:await fs.readFile(output),metrics:final};
+  }finally{await fs.rm(dir,{recursive:true,force:true});}
+}
+async function generate(order){
+  const result=await voicebox.generate({profileId:order.voiceboxProfileId,text:order.phrase,language:order.voiceboxLanguage,engine:order.voiceboxEngine,modelSize:order.voiceboxModelSize,instruct:order.voiceboxInstruct});
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'hsc-voicebox-'));
+  try{
+    const input=path.join(dir,'source.wav'),pcmPath=path.join(dir,'source.pcm');
+    await fs.writeFile(input,result.audio);
+    await ff(['-i',input,'-ar',String(SR),'-ac','1','-f','s16le',pcmPath]);
+    const pcm=await fs.readFile(pcmPath);pcmFloats(pcm);
+    return {pcm,generationId:result.id,engine:result.engine,modelSize:result.modelSize,sampleRate:result.sampleRate};
+  }finally{await fs.rm(dir,{recursive:true,force:true});}
+}
+module.exports={SR,gate,robot,crush,pulse,pcmFloats,filters,render,generate,measure};

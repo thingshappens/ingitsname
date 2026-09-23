@@ -1,0 +1,9 @@
+{
+  "id": "hsc-four-cuts-v1",
+  "cuts": [
+    {"style":"flat_tag","name":"Flat Tag Cut","description":"Dry, direct and unmistakably Monsieur.","mark":"◇"},
+    {"style":"clean","name":"Clean Cut","description":"Polished, present and ready to sit in the mix.","mark":"○"},
+    {"style":"dark_echo","name":"Dark Echo Cut","description":"Low, spacious and built for pressure.","mark":"◑"},
+    {"style":"sexy_robot","name":"Sexy Synthetic Cut","description":"Metallic, seductive and made for the drop.","mark":"⌁"}
+  ]
+}
