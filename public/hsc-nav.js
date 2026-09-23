@@ -40,10 +40,17 @@
     }
 
     var subtitle = mount.getAttribute('data-subtitle') || '';
-    var here = window.location.hostname + window.location.pathname;
+    // Which section are we in? Old subdomains count as their section.
+    var host = window.location.hostname;
+    var path = window.location.pathname;
+    var HOST_SECTION = { atelier: '/atelier/', theedit: '/edit/', tailor: '/tailor/' };
+    var sub = host.split('.')[0];
+    var section = HOST_SECTION[sub] || ('/' + (path.split('/')[1] || '') + (path.split('/')[1] ? '/' : ''));
 
     var linksHtml = LINKS.map(function (l) {
-      var isCurrent = here.indexOf(l.href.replace(/^https?:\/\//, '').split('#')[0]) === 0 && l.href.indexOf('#') === -1;
+      if (l.href.indexOf('#') !== -1) return '<a href="' + l.href + '">' + l.label + '</a>';
+      var linkPath = l.href.replace(/^https?:\/\/[^\/]+/, '');
+      var isCurrent = linkPath === section;
       return '<a href="' + l.href + '"' + (isCurrent ? ' aria-current="page"' : '') + '>' + l.label + '</a>';
     }).join('');
 
