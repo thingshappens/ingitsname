@@ -26,6 +26,16 @@ export async function admin(request, env, url) {
     const r = await fetch(target, init);
     return new Response(await r.text(), { status: r.status, headers: { 'content-type': r.headers.get('content-type') || 'application/json', 'cache-control': 'no-store' } });
   }
+  if (url.pathname === '/api/admin/paddle') {
+    // Read Paddle config (GET), or update webhook destinations (PATCH /notification-settings/…).
+    const target = String(body?.url || '');
+    const method = body?.method || 'GET';
+    if (!/^https:\/\/api\.paddle\.com\//.test(target) || !(method === 'GET' || (method === 'PATCH' && /\/notification-settings\/ntfset_/.test(target)))) return new Response('Target not allowed', { status: 400 });
+    const init = { method, headers: { authorization: `Bearer ${env.PADDLE_API_KEY}`, 'content-type': 'application/json' } };
+    if (body.body !== undefined) init.body = JSON.stringify(body.body);
+    const r = await fetch(target, init);
+    return new Response(await r.text(), { status: r.status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+  }
   if (url.pathname === '/api/admin/edit-selftest') {
     // A paid-looking test order that skips Paddle, to test voice → cuts → download end to end.
     for (const k in env) if (typeof env[k] === 'string') process.env[k] = env[k];
