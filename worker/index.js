@@ -87,6 +87,10 @@ export default {
       for (const n of names) out[n] = { env: state(env[n]), processEnv: state(process.env[n]) };
       return new Response(JSON.stringify(out, null, 1), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
     }
+    // Public Paddle.js config (client-side tokens are safe to expose by design).
+    if (url.pathname === '/api/paddle-client') {
+      return new Response(JSON.stringify({ environment: env.PADDLE_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'production', token: env.PADDLE_CLIENT_TOKEN || null }), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+    }
     if (url.pathname.startsWith('/api/admin/')) return admin(request, env, url);
     const target = HOST_REDIRECT[url.hostname];
     // Old subdomain links land on the right section; API calls and shared files still answer there.

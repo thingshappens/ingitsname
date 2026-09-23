@@ -72,6 +72,18 @@
     }
   }
 
+  // Paddle Billing sends buyers to our payment link with ?_ptxn=…; Paddle.js opens the checkout for it.
+  if (/[?&]_ptxn=/.test(window.location.search) && !window.__hscPaddle) {
+    window.__hscPaddle = true;
+    fetch('/api/paddle-client', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (c) {
+      if (!c || !c.token) return;
+      var s = document.createElement('script');
+      s.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+      s.onload = function () { if (c.environment === 'sandbox') window.Paddle.Environment.set('sandbox'); window.Paddle.Initialize({ token: c.token }); };
+      document.head.appendChild(s);
+    }).catch(function () {});
+  }
+
   // Render immediately when the mount is already in the DOM (the script tag sits right after it),
   // so the header is part of the first paint instead of popping in at DOMContentLoaded.
   if (document.getElementById('hsc-shell-mount') || document.readyState !== 'loading') {
