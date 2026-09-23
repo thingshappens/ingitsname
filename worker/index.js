@@ -66,6 +66,14 @@ export default {
     // it in on each request (idempotent, cheap).
     for (const k in env) if (typeof env[k] === "string") process.env[k] = env[k];
     const url = new URL(request.url);
+    // Config health: says which secrets/vars are present — never their values.
+    if (url.pathname === '/api/health') {
+      const names = ['ELEVENLABS_API_KEY','RESEND_API_KEY','PADDLE_API_KEY','PADDLE_PRICE_ATELIER_4','PADDLE_PRICE_ATELIER_PACK','PADDLE_PRICE_THE_EDIT_4','PADDLE_WEBHOOK_SECRET','THE_EDIT_WEBHOOK_SECRET','THE_EDIT_PAYMENT_PROVIDER','ATELIER_PAYMENT_PROVIDER','THE_EDIT_ENABLED','THE_EDIT_RUNPOD_API_KEY','THE_EDIT_RUNPOD_ENDPOINT_ID','THE_EDIT_VOICES_JSON','THE_EDIT_ORIGIN','THE_EDIT_REMOTE_RENDER','THE_EDIT_QA_APPROVED_VERSION','THE_EDIT_TERMS_URL','HSC_OWNER_CODE','UPSTASH_REDIS_REST_URL','UPSTASH_REDIS_REST_TOKEN','KV_REST_API_URL','KV_REST_API_TOKEN','STRIPE_SECRET_KEY','PRODUCER_PACK_ENABLED','EXTERNAL_GENERATION_ENABLED'];
+      const state = (v) => v === undefined ? 'missing' : typeof v !== 'string' ? typeof v : v.trim() === '' ? 'empty' : 'set';
+      const out = {};
+      for (const n of names) out[n] = { env: state(env[n]), processEnv: state(process.env[n]) };
+      return new Response(JSON.stringify(out, null, 1), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+    }
     const target = HOST_REDIRECT[url.hostname];
     // Old subdomain links land on the right section; API calls and shared files still answer there.
     if (target && (url.pathname === '/' || url.pathname === '/edit' || url.pathname === '/edit/')) {
