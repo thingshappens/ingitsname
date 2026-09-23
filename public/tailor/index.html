@@ -1,14 +1,171 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>The Fitting Room · Haute Sound Couture</title>
-    <meta http-equiv="refresh" content="0;url=https://tailor.hautesoundcouture.com/?utm_source=hsc_app&utm_medium=tailor_route&utm_campaign=consolidation">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#11100e" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="description" content="Commission a one-of-one collection of sounds from Haute Sound Couture." />
+    <title>The Fitting Room — Haute Sound Couture</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QGMG5DTDXQ"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-QGMG5DTDXQ');</script>
+    <script type="module" crossorigin src="/tailor/assets/index-nTvZ61Ni.js"></script>
+    <link rel="stylesheet" crossorigin href="/tailor/assets/index-M4E58Pit.css">
   </head>
   <body>
-    <p>Opening The Fitting Room…</p>
-    <p><a href="https://tailor.hautesoundcouture.com/?utm_source=hsc_app&utm_medium=tailor_route&utm_campaign=consolidation">Continue to private commissions ↗</a></p>
-    <script>location.replace('https://tailor.hautesoundcouture.com/?utm_source=hsc_app&utm_medium=tailor_route&utm_campaign=consolidation');</script>
+    <div id="hsc-shell-mount" data-subtitle="TAILOR · CUSTOM SOUND DESIGN"></div><script src="/hsc-nav.js"></script>
+
+    <main>
+      <section class="intro">
+        <p class="eyebrow">THE FITTING ROOM · PRIVATE COMMISSIONS</p>
+        <h1>Let’s tailor<br><em>your sound.</em></h1>
+        <p class="lead">Not a stock pack. Not a preset. A collection cut to the measurements of your project — then made only once.</p>
+        <div class="edition">HSC · ATELIER 001</div>
+      </section>
+
+      <section class="studio" aria-label="Sound commission configurator">
+        <div class="form-panel">
+          <div class="progress-wrap">
+            <div class="progress-meta"><span id="stepLabel">01 / 06</span><span id="stepName">THE PROJECT</span></div>
+            <div class="progress"><i id="progressBar"></i></div>
+          </div>
+
+          <form id="fittingForm">
+            <fieldset class="step active" data-title="THE PROJECT">
+              <legend>What are we<br>designing for?</legend>
+              <p class="hint">Choose the context. We’ll adjust the cut later.</p>
+              <div class="cards" data-field="project">
+                <button type="button" class="choice selected" data-value="Track / release"><b>Track / release</b><small>A distinct sonic signature for one production.</small></button>
+                <button type="button" class="choice" data-value="Live set"><b>Live set</b><small>Hooks, transitions and moments built for performance.</small></button>
+                <button type="button" class="choice" data-value="Artist identity"><b>Artist identity</b><small>A reusable palette that still sounds unmistakably yours.</small></button>
+                <button type="button" class="choice" data-value="Something else"><b>Something else</b><small>Good. The difficult things are usually more interesting.</small></button>
+              </div>
+            </fieldset>
+
+            <fieldset class="step" data-title="THE MATERIAL">
+              <legend>Choose the<br>raw material.</legend>
+              <p class="hint">Select everything the collection may need.</p>
+              <div class="pills" data-field="material" data-multiple="true">
+                <button type="button" class="pill selected" data-value="Vocal samples">Vocal samples</button>
+                <button type="button" class="pill" data-value="Processed voices">Processed voices</button>
+                <button type="button" class="pill" data-value="Sound effects">Sound effects</button>
+                <button type="button" class="pill" data-value="Textures & atmospheres">Textures & atmospheres</button>
+                <button type="button" class="pill" data-value="Transitions">Transitions</button>
+                <button type="button" class="pill" data-value="The uncategorizable">The uncategorizable</button>
+              </div>
+              <label class="text-label">Anything specific?<textarea id="materialNote" placeholder="A spoken phrase, metallic tension, a strange human texture…"></textarea></label>
+            </fieldset>
+
+            <fieldset class="step" data-title="THE CHARACTER">
+              <legend>How should it<br><em>feel?</em></legend>
+              <p class="hint">Pick up to three. Contradictions are welcome.</p>
+              <div class="pills moods" data-field="mood" data-multiple="true" data-max="3">
+                <button type="button" class="pill selected" data-value="Elegant">Elegant</button>
+                <button type="button" class="pill" data-value="Raw">Raw</button>
+                <button type="button" class="pill" data-value="Dark">Dark</button>
+                <button type="button" class="pill" data-value="Playful">Playful</button>
+                <button type="button" class="pill" data-value="Intimate">Intimate</button>
+                <button type="button" class="pill" data-value="Aggressive">Aggressive</button>
+                <button type="button" class="pill" data-value="Cinematic">Cinematic</button>
+                <button type="button" class="pill" data-value="Unsettling">Unsettling</button>
+                <button type="button" class="pill" data-value="Euphoric">Euphoric</button>
+              </div>
+              <div class="range-row">
+                <label>Recognizable<span>Subtle</span></label>
+                <input id="intensity" type="range" min="1" max="5" value="3" />
+                <label class="right">Transformative<span>Extreme</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset class="step" data-title="THE CUT">
+              <legend>Choose the<br>dimensions.</legend>
+              <p class="hint">An initial estimate, before we discuss the details.</p>
+              <div class="measure">
+                <label>Number of finished sounds <strong id="soundCount">20</strong></label>
+                <input id="count" type="range" min="10" max="100" step="10" value="20" />
+                <div class="ticks"><span>10</span><span>50</span><span>100</span></div>
+              </div>
+              <div class="cards compact" data-field="exclusivity">
+                <button type="button" class="choice selected" data-value="One-of-one exclusive"><b>One-of-one</b><small>Made for you, delivered once, never resold.</small></button>
+                <button type="button" class="choice" data-value="Non-exclusive"><b>Edition</b><small>Created to your brief; HSC may reuse the material.</small></button>
+              </div>
+              <p class="mini-heading">QUOTE BASIS</p>
+              <p class="hint">No payment is taken here. HSC reviews the request first, then confirms scope and quote personally.</p>
+            </fieldset>
+
+            <fieldset class="step" data-title="TIMING & BUDGET">
+              <legend>Set the practical<br>measurements.</legend>
+              <p class="hint">These details help us judge the right scope before replying.</p>
+              <p class="mini-heading">WHEN DO YOU NEED IT?</p>
+              <div class="pills" data-field="deadline">
+                <button type="button" class="pill selected" data-value="No specific deadline">No specific deadline</button>
+                <button type="button" class="pill" data-value="Within 1 week">Within 1 week</button>
+                <button type="button" class="pill" data-value="1–2 weeks">1–2 weeks</button>
+                <button type="button" class="pill" data-value="2–4 weeks">2–4 weeks</button>
+              </div>
+              <p class="mini-heading">APPROXIMATE BUDGET</p>
+              <div class="pills" data-field="budget">
+                <button type="button" class="pill" data-value="Under $100">Under $100</button>
+                <button type="button" class="pill" data-value="$100–250">$100–250</button>
+                <button type="button" class="pill selected" data-value="$250–500">$250–500</button>
+                <button type="button" class="pill" data-value="$500+">$500+</button>
+                <button type="button" class="pill" data-value="Not sure yet">Not sure yet</button>
+              </div>
+            </fieldset>
+
+            <fieldset class="step" data-title="YOUR DETAILS">
+              <legend>Request your<br>private fitting.</legend>
+              <p class="hint">No payment. We review the brief and speak before anything begins.</p>
+              <div class="fields">
+                <label>Name<input id="name" type="text" placeholder="Your name" autocomplete="name" /></label>
+                <label>Email<input id="email" type="email" placeholder="you@studio.com" autocomplete="email" /></label>
+                <label class="full">References or context<textarea id="context" placeholder="Links, BPM, key, deadline, references or anything we should hear…"></textarea></label>
+              </div>
+              <label class="agree"><input id="agree" type="checkbox" /><span>I understand this is a request for a conversation, not an automatic order.</span></label>
+            </fieldset>
+
+            <div class="actions">
+              <button id="prev" type="button" class="secondary" disabled>Back</button>
+              <button id="next" type="button" class="primary">Continue <span>→</span></button>
+            </div>
+          </form>
+        </div>
+
+        <aside class="summary">
+          <div>
+            <p class="eyebrow">YOUR COMMISSION</p>
+            <h2 id="summaryTitle">Track / release</h2>
+            <dl>
+              <div><dt>Material</dt><dd id="summaryMaterial">Vocal samples</dd></div>
+              <div><dt>Character</dt><dd id="summaryMood">Elegant</dd></div>
+              <div><dt>Collection</dt><dd id="summaryCount">20 finished sounds</dd></div>
+              <div><dt>Edition</dt><dd id="summaryExclusive">One-of-one exclusive</dd></div>
+              <div><dt>Process</dt><dd id="summaryPayment">Quote after review</dd></div>
+              <div><dt>Timing</dt><dd id="summaryDeadline">No specific deadline</dd></div>
+            </dl>
+          </div>
+          <div class="estimate">
+            <span>ESTIMATED ATELIER RANGE</span>
+            <strong id="price">$220–310 USD</strong>
+            <small>This is an initial estimate, not a binding quote. Final pricing is confirmed after we personally review your brief.</small>
+          </div>
+          <blockquote>“Made for one.<br>Made once.”</blockquote>
+        </aside>
+      </section>
+    </main>
+
+    <footer><span>HAUTE SOUND COUTURE © 2026</span><span>EVERYWHERE</span></footer>
+
+    <dialog id="completeDialog">
+      <button class="close" aria-label="Close">×</button>
+      <p class="eyebrow">YOUR FITTING IS READY</p>
+      <h2>A brief with<br>your measurements.</h2>
+      <p>Review complete. No payment is taken now. Send the measurements to the HSC atelier and receive a copy by email.</p>
+      <p id="sendStatus" aria-live="polite"></p>
+      <button id="sendBrief" class="primary">Send request <span>→</span></button>
+    </dialog>
   </body>
 </html>
