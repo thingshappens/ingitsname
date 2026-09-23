@@ -399,7 +399,7 @@ function renderVariations(){
   document.querySelectorAll('.dispatch-cut').forEach(b=>b.addEventListener('click',()=>showDispatch(Number(b.dataset.i),b)));
   document.querySelectorAll('.download:not(:disabled)').forEach(b=>b.addEventListener('click',()=>downloadVariation(Number(b.dataset.i),b)));
   $('#checkout').disabled=canDownload||!checkoutReady;
-  $('#checkout').textContent=isOwner?'OWNER DOWNLOADS UNLOCKED':isPaid?'PURCHASE COMPLETE · WAVS UNLOCKED':checkoutReady?'UNLOCK 4 WAV FILES · $9':'CHECKOUT TEMPORARILY UNAVAILABLE';
+  $('#checkout').textContent=isOwner?'OWNER DOWNLOADS UNLOCKED':isPaid?'PURCHASE COMPLETE · WAVS UNLOCKED':checkoutReady?'UNLOCK 4 WAV FILES · $12':'CHECKOUT TEMPORARILY UNAVAILABLE';
   if(producerPackAvailable&&!isOwner&&packRemaining<=0)$('#packCheckout').textContent=packPurchaseLabel();
 }
 
@@ -434,7 +434,7 @@ async function verifyCheckout(sessionId){
     const r=await fetch(`/api/checkout-status?session_id=${encodeURIComponent(sessionId)}`,{cache:'no-store'}),data=await r.json();
     if(r.ok&&data.paid&&currentGenerationId&&data.generationId===currentGenerationId){
       isPaid=true;sessionStorage.setItem('hscPaidSession',sessionId);renderVariations();
-      track('purchase',{transaction_id:sessionId,value:9,currency:'USD',items:[{item_id:'hsc_sample_atelier_four_cuts',item_name:'Four Custom WAV Cuts',price:9,quantity:1}]});
+      track('purchase',{transaction_id:sessionId,value:12,currency:'USD',items:[{item_id:'hsc_sample_atelier_four_cuts',item_name:'Four Custom WAV Cuts',price:12,quantity:1}]});
       $('#status').textContent=`Payment confirmed${data.email?` for ${data.email}`:''}. All four WAV downloads are unlocked.`;
       return true;
     }
@@ -503,7 +503,7 @@ $('#checkout').addEventListener('click',async()=>{
   if(!sourceBuffer){
     phrase.scrollIntoView({behavior:'smooth',block:'center'});
     phrase.focus();
-    $('#status').textContent='Create your four cuts first — then unlock every WAV for $9.';
+    $('#status').textContent='Create your four cuts first — then unlock every WAV for $12.';
     return;
   }
   const popup=window.open('about:blank','hscCheckout');
@@ -511,14 +511,14 @@ $('#checkout').addEventListener('click',async()=>{
   try{
     const r=await fetch('/api/create-checkout',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({generationId:currentGenerationId})}),data=await r.json();
     if(!r.ok)throw new Error(data.error||'Could not start checkout');
-    track('begin_checkout',{currency:'USD',value:9,items:[{item_id:'hsc_sample_atelier_four_cuts',item_name:'Four Custom WAV Cuts',price:9,quantity:1}]});
+    track('begin_checkout',{currency:'USD',value:12,items:[{item_id:'hsc_sample_atelier_four_cuts',item_name:'Four Custom WAV Cuts',price:12,quantity:1}]});
     if(popup)popup.location=data.url;else window.location.href=data.url;
     $('#checkout').textContent='WAITING FOR PAYMENT…';
     const started=Date.now();
     const timer=setInterval(async()=>{
-      if(popup?.closed||await verifyCheckout(data.id)||Date.now()-started>10*60*1000){clearInterval(timer);if(!isPaid){$('#checkout').disabled=false;$('#checkout').textContent='UNLOCK 4 WAV FILES · $9';}}
+      if(popup?.closed||await verifyCheckout(data.id)||Date.now()-started>10*60*1000){clearInterval(timer);if(!isPaid){$('#checkout').disabled=false;$('#checkout').textContent='UNLOCK 4 WAV FILES · $12';}}
     },2500);
-  }catch(e){if(popup)popup.close();$('#status').textContent=e.message;$('#checkout').disabled=false;$('#checkout').textContent='UNLOCK 4 WAV FILES · $9';}
+  }catch(e){if(popup)popup.close();$('#status').textContent=e.message;$('#checkout').disabled=false;$('#checkout').textContent='UNLOCK 4 WAV FILES · $12';}
 });
 
 const returnedSession=sessionStorage.getItem('hscPaidSession');

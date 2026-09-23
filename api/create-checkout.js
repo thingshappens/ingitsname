@@ -1,7 +1,7 @@
 const Stripe = require('stripe');
 const paddle = require('../lib/edit/paddle');
 
-const FOUR_CUT_PRICE_CENTS = 900;
+const FOUR_CUT_PRICE_CENTS = 1200;
 const PACK_PRICE_CENTS = 3900;
 const VALID_GENERATION = /^[a-f0-9-]{20,64}$/i;
 
