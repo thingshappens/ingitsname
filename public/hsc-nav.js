@@ -13,7 +13,7 @@
     { href: 'https://hautesoundcouture.com/atelier/', label: 'Atelier' },
     { href: 'https://hautesoundcouture.com/edit/', label: 'The Edit' },
     { href: 'https://hautesoundcouture.com/tailor/', label: 'Tailor' },
-    { href: 'https://hautesoundcouture.com/#free-samples', label: 'Free Samples' },
+    { href: 'https://hautesoundcouture.com/free-samples/', label: 'Free Samples' },
     { href: 'https://hautesoundcouture.com/maison/', label: 'The Maison' }
   ];
 

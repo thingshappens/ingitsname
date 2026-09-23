@@ -11,12 +11,13 @@ import packStatus from '../api/pack-status.js';
 import theEdit from '../api/the-edit.js';
 import theEditWebhook from '../api/the-edit-webhook.js';
 import tailorSend from '../tailor/api/send.js';
+import freeSamples from '../api/free-samples.js';
 
 const API = {
   '/api/config': config, '/api/voices': voices, '/api/generate': generate,
   '/api/create-checkout': createCheckout, '/api/checkout-status': checkoutStatus,
   '/api/pack-status': packStatus, '/api/the-edit': theEdit,
-  '/api/the-edit-webhook': theEditWebhook, '/api/send': tailorSend
+  '/api/the-edit-webhook': theEditWebhook, '/api/send': tailorSend, '/api/free-samples': freeSamples
 };
 
 // Old subdomains → sections of the one site.
