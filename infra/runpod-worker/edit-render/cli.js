@@ -2,6 +2,17 @@
 // render() used on Vercel (Node + system ffmpeg), writes
 // {audioBase64, metrics} JSON to stdout. One-shot process per call.
 process.env.THE_EDIT_FFMPEG_PATH = process.env.THE_EDIT_FFMPEG_PATH || 'ffmpeg';
+// The Sexy Synthetic cut normally asks RunPod for its WORLD pitch transform.
+// We ARE the RunPod box, so run that transform locally instead (same code, sexy.py).
+process.env.THE_EDIT_RUNPOD_ENDPOINT_ID = process.env.THE_EDIT_RUNPOD_ENDPOINT_ID || 'local';
+process.env.THE_EDIT_RUNPOD_API_KEY = process.env.THE_EDIT_RUNPOD_API_KEY || 'local-transform-only';
+const { spawnSync } = require('node:child_process');
+const voicebox = require('./voicebox.js');
+voicebox.sexySynthetic = async (audio) => {
+  const r = spawnSync('python', [require('node:path').join(__dirname, 'sexy.py')], { input: audio, maxBuffer: 64 * 1024 * 1024, timeout: 60000 });
+  if (r.status !== 0 || !r.stdout || r.stdout.length < 44) throw new Error('Voice transformation failed: ' + String(r.stderr || '').slice(0, 200));
+  return r.stdout;
+};
 const { render } = require('./render.js');
 
 let raw = '';

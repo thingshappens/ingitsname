@@ -13,9 +13,11 @@
   },
   "alias": { "ffmpeg-static": "./worker/ffmpeg-stub.js" },
   "observability": { "enabled": true },
+  "triggers": { "crons": ["* * * * *"] },
   "vars": {
     "VERCEL_ENV": "production",
     "THE_EDIT_ORIGIN": "https://hautesoundcouture.com/",
-    "THE_EDIT_REMOTE_RENDER": "1"
+    "THE_EDIT_REMOTE_RENDER": "1",
+    "THE_EDIT_REMOTE_FULFIL": "1"
   }
 }

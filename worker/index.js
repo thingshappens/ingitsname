@@ -13,6 +13,8 @@ import theEditWebhook from '../api/the-edit-webhook.js';
 import tailorSend from '../tailor/api/send.js';
 import freeSamples from '../api/free-samples.js';
 import { admin } from './admin.js';
+import { createService } from '../lib/edit/service.js';
+import editStore from '../lib/edit/store.js';
 
 const API = {
   '/api/config': config, '/api/voices': voices, '/api/generate': generate,
@@ -61,6 +63,16 @@ async function runHandler(handler, request, rawBody) {
 }
 
 export default {
+  // Every minute: finish paid Edit orders whose GPU job is done, even if the buyer closed the page.
+  async scheduled(event, env, ctx) {
+    for (const k in env) if (typeof env[k] === 'string') process.env[k] = env[k];
+    if (process.env.THE_EDIT_REMOTE_FULFIL !== '1') return;
+    const service = createService();
+    const pending = (await editStore.redis().smembers('hsc:edit:pending')) || [];
+    for (const id of pending.slice(0, 10)) {
+      try { await service.refresh(id); } catch (error) { console.error(JSON.stringify({ event: 'the_edit_refresh_error', error: String(error?.message || error) })); }
+    }
+  },
   async fetch(request, env) {
     // Cloudflare hands secrets/vars in via env, not process.env — but every
     // handler imported unchanged from Vercel reads process.env.*, so mirror

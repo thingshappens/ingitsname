@@ -43,7 +43,8 @@ module.exports=async function(req,res){
     if(!['status','download'].includes(action))return res.status(404).json({error:'Not found'});
     const {orderId,accessToken,cutId}=req.body||{};
     if(typeof orderId!=='string'||!/^[a-f0-9-]{36}$/.test(orderId))return res.status(403).json({error:'Order link is invalid'});
-    const order=await service.authorized(orderId,accessToken);if(!order)return res.status(403).json({error:'Order link is invalid'});
+    let order=await service.authorized(orderId,accessToken);if(!order)return res.status(403).json({error:'Order link is invalid'});
+    if(order.status==='rendering')order=await service.refresh(order.id)||order;
     if(action==='status')return res.status(200).json({id:order.id,status:order.status,error:order.lastError,expiresAt:order.downloadExpiresAt,cuts:order.cuts.map(c=>({id:c.id,name:STYLES[c.style]||'Chopped Up',groove:c.groove,cutAmount:c.cutAmount,renderStatus:c.renderStatus,filename:filename(c,order.bpm)}))});
     if(order.status!=='ready')return res.status(409).json({error:'Your cuts are not ready yet.'});
     if(order.downloadExpiresAt<Date.now())return res.status(410).json({error:'This download has expired. Please contact HSC with your order number.'});
