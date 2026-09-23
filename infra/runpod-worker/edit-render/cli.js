@@ -1,7 +1,7 @@
 // Reads {pcmBase64, cut, order} as JSON from stdin, runs the exact same
 // render() used on Vercel (Node + system ffmpeg), writes
 // {audioBase64, metrics} JSON to stdout. One-shot process per call.
-process.env.THE_EDIT_FFMPEG_PATH = process.env.THE_EDIT_FFMPEG_PATH || 'ffmpeg';
+process.env.THE_EDIT_FFMPEG_PATH = process.env.THE_EDIT_FFMPEG_PATH || require('node:path').join(__dirname, 'node_modules/ffmpeg-static/ffmpeg');
 // The Sexy Synthetic cut normally asks RunPod for its WORLD pitch transform.
 // We ARE the RunPod box, so run that transform locally instead (same code, sexy.py).
 process.env.THE_EDIT_RUNPOD_ENDPOINT_ID = process.env.THE_EDIT_RUNPOD_ENDPOINT_ID || 'local';

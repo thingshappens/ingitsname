@@ -176,7 +176,7 @@ def render(payload: dict[str, Any]) -> dict[str, Any]:
     except subprocess.TimeoutExpired:
         return fail("Render timed out")
     if proc.returncode != 0:
-        return fail(f"Render failed: {proc.stderr.decode('utf-8', 'replace')[:500]}")
+        return fail(f"Render failed: {proc.stderr.decode('utf-8', 'replace')[-800:]}")
     try:
         result = _json.loads(proc.stdout.decode("utf-8"))
     except ValueError:
@@ -240,7 +240,7 @@ def upstash_put(store: dict[str, Any], prefix: str, audio: bytes) -> dict[str, A
 def to_pcm48(wav: bytes) -> bytes:
     """Same conversion lib/edit/render.js generate() did with ffmpeg: 48 kHz mono s16le."""
     proc = subprocess.run(
-        ["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", "pipe:0", "-ar", "48000", "-ac", "1", "-f", "s16le", "pipe:1"],
+        [os.environ.get("THE_EDIT_FFMPEG_PATH", "ffmpeg"), "-hide_banner", "-loglevel", "error", "-i", "pipe:0", "-ar", "48000", "-ac", "1", "-f", "s16le", "pipe:1"],
         input=wav, capture_output=True, timeout=60,
     )
     if proc.returncode != 0 or len(proc.stdout) < 4800:
