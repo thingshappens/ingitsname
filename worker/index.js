@@ -12,6 +12,7 @@ import theEdit from '../api/the-edit.js';
 import theEditWebhook from '../api/the-edit-webhook.js';
 import tailorSend from '../tailor/api/send.js';
 import freeSamples from '../api/free-samples.js';
+import { admin } from './admin.js';
 
 const API = {
   '/api/config': config, '/api/voices': voices, '/api/generate': generate,
@@ -74,6 +75,7 @@ export default {
       for (const n of names) out[n] = { env: state(env[n]), processEnv: state(process.env[n]) };
       return new Response(JSON.stringify(out, null, 1), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
     }
+    if (url.pathname.startsWith('/api/admin/')) return admin(request, env, url);
     const target = HOST_REDIRECT[url.hostname];
     // Old subdomain links land on the right section; API calls and shared files still answer there.
     if (target && (url.pathname === '/' || url.pathname === '/edit' || url.pathname === '/edit/')) {
