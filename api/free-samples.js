@@ -54,7 +54,7 @@ module.exports = async function handler(req, res) {
       html: shell('New survey answers.', `${esc(email)} answered the free samples survey${answers.notify === 'Yes' ? ' and wants to hear about releases' : ''}. Reply to this email to send the pack.`, true)
     },
     {
-      from, to: [email], reply_to: 'hautesoundcouture@gmail.com',
+      from, to: [email], reply_to: 'contact@hautesoundcouture.com',
       subject: 'Your answers are with the atelier',
       html: shell('Thank you.<br>Your pack is on its way.', 'We read every answer ourselves. Once we have, your free pack of royalty-free, authentically produced HSC samples will arrive at this address.', false)
     }
