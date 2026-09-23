@@ -73,3 +73,5 @@ h1 em,h2 em,h3 em{color:var(--gold);font-style:italic}
  .episode{grid-template-columns:1fr;gap:8px}
  .site-footer{flex-direction:column;text-align:center}
 }
+.member .bio-link{color:var(--gold);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;white-space:nowrap;transition:color .15s}
+.member .bio-link:hover,.member .bio-link:focus-visible{color:var(--paper)}
