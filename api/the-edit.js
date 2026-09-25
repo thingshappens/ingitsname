@@ -2,6 +2,8 @@ const {settings,previewSettings,createService}=require('../lib/edit/service');
 const {voices,InputError,STYLES,CUT_SET_ID,DELIVERIES,VERSION,filename}=require('../lib/edit/model');
 const store=require('../lib/edit/store');
 const rendering=require('../lib/edit/render');
+const voicebox=require('../lib/edit/voicebox');
+const crypto=require('node:crypto');
 const {paddleSandbox,sandboxCheckoutAllowed,SANDBOX_CHECKOUT_DENIED}=require('../lib/owner');
 const service=createService();
 module.exports=async function(req,res){
@@ -25,8 +27,21 @@ module.exports=async function(req,res){
       if(!cut||!Object.hasOwn(STYLES,cut.style)||cut.groove!==undefined||cut.cutAmount!==undefined)throw new InputError('Choose a cut to preview.');
       const previewLimit=process.env.VERCEL_ENV==='production'?12:100;
       if(!await store.previewRateLimit(ip,previewLimit))return res.status(429).json({error:`You have used the ${previewLimit} short previews available this hour. Please come back shortly.`});
+      if(!await store.previewRateLimit('site-wide',Number(process.env.THE_EDIT_PREVIEW_SITE_LIMIT)||120))return res.status(429).json({error:'Previews are busy right now. Please try again in a little while.'});
       const order={phrase:phrase.trim(),voiceId:voice.id,characterId:voice.id,voiceRange:voice.range,voiceProfile:voice.voiceProfile,voiceboxProfileId:voice.profileId,voiceboxEngine:voice.engine,voiceboxModelSize:voice.modelSize||null,voiceboxLanguage:voice.language,voiceboxInstruct:voice.instruct||null,voiceProfileVersion:voice.profileVersion||'v1',delivery:'dark',bpm};
       const previewCut={style:cut.style,recipeVersion:VERSION};
+      if(process.env.THE_EDIT_REMOTE_FULFIL==='1'){
+        // ffmpeg can't run in the Worker: run the same GPU "fulfil" job paid orders use, for one cut.
+        const cutId=crypto.randomUUID(),prefix=`hsc:edit:preview-audio:${cutId}`;
+        const creds={url:process.env.UPSTASH_REDIS_REST_URL||process.env.KV_REST_API_URL,token:process.env.UPSTASH_REDIS_REST_TOKEN||process.env.KV_REST_API_TOKEN};
+        const out=await voicebox.run('fulfil',{order:{phrase:order.phrase,bpm:order.bpm,voiceboxProfileId:order.voiceboxProfileId,voiceboxEngine:order.voiceboxEngine,voiceboxModelSize:order.voiceboxModelSize,voiceboxLanguage:order.voiceboxLanguage,voiceboxInstruct:order.voiceboxInstruct},cuts:[{id:cutId,slot:1,...previewCut}],store:{...creds,ttl:900,prefixes:{[cutId]:prefix}}});
+        const r=Array.isArray(out?.cuts)&&out.cuts.find(x=>x&&x.id===cutId);
+        if(!r||r.prefix!==prefix)throw new Error('Preview render returned no audio');
+        const buffer=await store.audio({prefix,count:r.count,bytes:r.bytes,expiresAt:Date.now()+60000});
+        res.setHeader('Content-Type','audio/wav');res.setHeader('Content-Disposition','inline; filename="HSC_TheEdit_preview.wav"');
+        if(out.generation?.id)res.setHeader('X-HSC-Generation-ID',String(out.generation.id));
+        return res.status(200).send(buffer);
+      }
       const source=await rendering.generate(order);
       const audio=await rendering.render(source.pcm,previewCut,order);
       res.setHeader('Content-Type','audio/wav');res.setHeader('Content-Disposition','inline; filename="HSC_TheEdit_preview.wav"');
