@@ -21,14 +21,19 @@ try{
   const country=f.locator('select').first();if(await country.count())await country.selectOption('SE');
   await f.getByRole('button',{name:/continue/i}).first().click();
   await page.waitForTimeout(4000);await shot(page,'3-after-email');
-  const cardBtn=f.getByRole('button',{name:/^card$|card/i}).first();if(await cardBtn.count()&&await cardBtn.isVisible().catch(()=>false))await cardBtn.click().catch(()=>{});
-  await page.waitForTimeout(2000);
-  await f.getByLabel(/card number/i).first().fill('4242424242424242');
-  await f.getByLabel(/name/i).first().fill('HSC QA');
-  await f.getByLabel(/expir/i).first().fill('12/30');
-  await f.getByLabel(/security|cvv|cvc/i).first().fill('100');
+  const fillAny=async(label,selectors,value)=>{
+    for(let t=0;t<20;t++){
+      for(const fr of page.frames()){for(const sel of selectors){const l=fr.locator(sel).first();if(await l.count().catch(()=>0)&&await l.isVisible().catch(()=>false)){await l.click();await l.pressSequentially(value,{delay:40});console.log('filled',label);return;}}}
+      await page.waitForTimeout(1000);
+    }
+    throw new Error('field not found: '+label);
+  };
+  await fillAny('card number',['input[placeholder*="XXXX"]','input[autocomplete="cc-number"]','input[name*="card" i][name*="number" i]'],'4242424242424242');
+  await fillAny('name',['input[autocomplete="cc-name"]','input[name*="name" i]','input[aria-label*="name" i]'],'HSC QA');
+  await fillAny('expiry',['input[placeholder*="MM"]','input[autocomplete="cc-exp"]'],'1230');
+  await fillAny('cvv',['input[placeholder*="CVV" i]','input[autocomplete="cc-csc"]'],'100');
   await shot(page,'4-card');
-  await f.getByRole('button',{name:/pay/i}).last().click();
+  await f.getByRole('button',{name:/^pay \$/i}).first().click();
   await page.waitForTimeout(8000);await shot(page,'5-paid');
   const u=new URL(page.url());console.log('order page:',u.searchParams.has('order')&&u.hash.includes('access')?'yes':'no');
   const started=Date.now();let state='';
