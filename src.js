@@ -480,7 +480,7 @@ $('#packCheckout').addEventListener('click',async()=>{
   const popup=window.open('about:blank','hscPackCheckout');
   $('#packCheckout').disabled=true;$('#packCheckout').textContent='OPENING SECURE CHECKOUT…';
   try{
-    const r=await fetch('/api/create-checkout',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({plan:'producer_pack',generationId:currentGenerationId})}),data=await r.json();
+    const r=await fetch('/api/create-checkout',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({plan:'producer_pack',generationId:currentGenerationId,ownerCode:$('#accessCode').value||undefined})}),data=await r.json();
     if(!r.ok)throw new Error(data.error||'Could not start Producer Pack checkout');
     track('begin_checkout',{currency:'USD',value:39,items:[{item_id:'hsc_sample_atelier_producer_pack',item_name:'Producer Pack — 20 WAV Files',price:39,quantity:1}]});
     if(popup)popup.location=data.url;else window.location.href=data.url;
@@ -509,7 +509,7 @@ $('#checkout').addEventListener('click',async()=>{
   const popup=window.open('about:blank','hscCheckout');
   $('#checkout').disabled=true;$('#checkout').textContent='OPENING SECURE CHECKOUT…';
   try{
-    const r=await fetch('/api/create-checkout',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({generationId:currentGenerationId})}),data=await r.json();
+    const r=await fetch('/api/create-checkout',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({generationId:currentGenerationId,ownerCode:$('#accessCode').value||undefined})}),data=await r.json();
     if(!r.ok)throw new Error(data.error||'Could not start checkout');
     track('begin_checkout',{currency:'USD',value:12,items:[{item_id:'hsc_sample_atelier_four_cuts',item_name:'Four Custom WAV Cuts',price:12,quantity:1}]});
     if(popup)popup.location=data.url;else window.location.href=data.url;

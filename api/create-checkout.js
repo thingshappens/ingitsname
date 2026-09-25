@@ -1,5 +1,6 @@
 const Stripe = require('stripe');
 const paddle = require('../lib/edit/paddle');
+const { sandboxCheckoutAllowed, SANDBOX_CHECKOUT_DENIED } = require('../lib/owner');
 
 const FOUR_CUT_PRICE_CENTS = 1200;
 const PACK_PRICE_CENTS = 3900;
@@ -23,7 +24,8 @@ function paymentProvider() {
 module.exports = async function (req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { generationId, plan } = req.body || {};
+  const { generationId, plan, ownerCode } = req.body || {};
+  if (!sandboxCheckoutAllowed(ownerCode)) return res.status(403).json({ error: SANDBOX_CHECKOUT_DENIED });
   if (!VALID_GENERATION.test(String(generationId || ''))) {
     return res.status(400).json({ error: 'Create your four cuts before opening checkout' });
   }

@@ -43,7 +43,7 @@ async function preview(cut,button){
   }catch(error){feedback.textContent=error.message;}
   finally{previewBusy=false;button.disabled=false;}
 }
-$('#editor').onsubmit=async e=>{e.preventDefault();if(busy||!config.enabled)return;busy=true;summary();remember();try{const result=await(await api('checkout',{...request,phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value)})).json();if(!result.url){location.assign(`/edit/?order=${encodeURIComponent(result.orderId)}#access=${request.accessToken}`);return;}event('checkout_started',{product:'the_edit',cut_count:cuts.length});location.assign(result.url);}catch(error){busy=false;summary();$('#feedback').textContent=error.message;}};
+$('#editor').onsubmit=async e=>{e.preventDefault();if(busy||!config.enabled)return;busy=true;summary();remember();try{const result=await(await api('checkout',{...request,phrase:$('#phrase').value,voiceId:$('#voice').value,bpm:Number($('#bpm').value),ownerCode:config.sandbox?$('#owner-code').value||undefined:undefined})).json();if(!result.url){location.assign(`/edit/?order=${encodeURIComponent(result.orderId)}#access=${request.accessToken}`);return;}event('checkout_started',{product:'the_edit',cut_count:cuts.length});location.assign(result.url);}catch(error){busy=false;summary();$('#feedback').textContent=error.message;}};
 let pollTimer,orderData,orderAuth;
 async function download(cutId){
   const status=$('#order-state');try{
@@ -81,6 +81,7 @@ async function init(){
   if(params.get('order')&&access){orderAuth={orderId:params.get('order'),accessToken:access};$('#editor').hidden=true;$('#order').hidden=false;poll();}
   try{
     config=await(await fetch('/api/the-edit?action=config')).json();
+    $('#owner-access').hidden=!config.sandbox;
     if(config.cutSet?.id!=='hsc-four-cuts-v1')throw new Error('The Edit cut catalogue is unavailable.');
     if(config.termsUrl){const terms=new URL(config.termsUrl);if(terms.protocol==='https:'){$('.licensing a').href=terms.href;$('#license p').textContent='Use words you have the right to use. The purchase is subject to the linked commercial-use terms. No exclusivity over a voice or phrase is included.';}}
     $('#availability').textContent=config.enabled?(config.preview?'PREVIEW · Stripe test mode. No live orders.':''):config.message;
