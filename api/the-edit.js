@@ -71,5 +71,5 @@ module.exports=async function(req,res){
       body=await store.audio(cut.asset);name=filename(cut,order.bpm);res.setHeader('Content-Type','audio/wav');
     }
     res.setHeader('Content-Disposition',`attachment; filename="${name}"`);return res.status(200).send(body);
-  }catch(error){return res.status(error instanceof InputError?400:503).json({error:error instanceof InputError?error.message:'The Edit is temporarily unavailable. Please try again shortly.'});}
+  }catch(error){if(!(error instanceof InputError))console.error(JSON.stringify({event:'the_edit_api_error',action,error:String(error?.message||error).slice(0,500)}));return res.status(error instanceof InputError?400:503).json({error:error instanceof InputError?error.message:'The Edit is temporarily unavailable. Please try again shortly.'});}
 };
