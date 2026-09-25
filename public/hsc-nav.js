@@ -79,7 +79,10 @@
       if (!c || !c.token) return;
       var s = document.createElement('script');
       s.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
-      s.onload = function () { if (c.environment === 'sandbox') window.Paddle.Environment.set('sandbox'); window.Paddle.Initialize({ token: c.token }); };
+      s.onload = function () { if (c.environment === 'sandbox') window.Paddle.Environment.set('sandbox'); window.Paddle.Initialize({ token: c.token, eventCallback: function (e) {
+        // After payment, close Paddle's success screen so the buyer sees their order and downloads underneath.
+        if (e && e.name === 'checkout.completed') setTimeout(function () { window.Paddle.Checkout.close(); }, 3000);
+      } }); };
       document.head.appendChild(s);
     }).catch(function () {});
   }
