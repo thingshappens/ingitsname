@@ -47,6 +47,10 @@ def ensure_voicebox() -> None:
     global VOICEBOX_PROCESS
     if VOICEBOX_PROCESS and VOICEBOX_PROCESS.poll() is None:
         return
+    # A Voicebox left running by an earlier handler process still owns the port;
+    # starting a second one exits at once. Reuse the one that already answers.
+    if voicebox_healthy():
+        return
     data_dir = Path(os.environ["VOICEBOX_DATA_DIR"])
     data_dir.mkdir(parents=True, exist_ok=True)
     # Voicebox's own output goes to a log file so a failed start can say why.
@@ -60,15 +64,19 @@ def ensure_voicebox() -> None:
     # Cold starts load the model from the network volume; allow up to 5 minutes.
     deadline = time.monotonic() + int(os.environ.get("HSC_VOICEBOX_START_TIMEOUT", "300"))
     while time.monotonic() < deadline:
+        if voicebox_healthy():
+            return
         if VOICEBOX_PROCESS.poll() is not None:
             break
-        try:
-            if httpx.get(f"{VOICEBOX_URL}/health", timeout=3).is_success:
-                return
-        except httpx.HTTPError:
-            pass
         time.sleep(1)
-    raise RuntimeError(f"Voicebox did not become ready: {voicebox_log_tail()}")
+    raise RuntimeError(f"Voicebox did not become ready (exit code {VOICEBOX_PROCESS.poll()}): {voicebox_log_tail()}")
+
+
+def voicebox_healthy() -> bool:
+    try:
+        return httpx.get(f"{VOICEBOX_URL}/health", timeout=3).is_success
+    except httpx.HTTPError:
+        return False
 
 
 def voicebox_log_tail(limit: int = 1500) -> str:
