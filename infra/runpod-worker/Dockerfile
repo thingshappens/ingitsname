@@ -21,7 +21,12 @@ RUN git clone https://github.com/jamiepine/voicebox.git /opt/voicebox \
   && cd /opt/voicebox \
   && git checkout "$VOICEBOX_REF" \
   && pip install --no-cache-dir -r backend/requirements.txt \
-  && pip install --no-cache-dir --no-deps chatterbox-tts hume-tada
+  && pip install --no-cache-dir --no-deps chatterbox-tts hume-tada \
+  && pip install --no-cache-dir --no-deps pedalboard==0.9.20
+
+# pedalboard 0.9.21+ Linux wheels are built with -march=native (AVX-512), so
+# importing them kills Voicebox with SIGILL on RunPod hosts without AVX-512
+# (e.g. AMD EPYC 7352). 0.9.20 is AVX2-only. See spotify/pedalboard#454.
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
