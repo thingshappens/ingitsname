@@ -18,6 +18,7 @@ for(const [name,handler,req] of [['The Edit',editHandler,editReq],['Atelier',ate
   test(`${name}: sandbox checkout without owner code is 403`,async()=>{const r=res();await handler(req({}),r);assert.equal(r.statusCode,403);assert.doesNotMatch(JSON.stringify(r.body),new RegExp(CODE));});
   test(`${name}: sandbox checkout with wrong owner code is 403`,async()=>{const r=res();await handler(req({ownerCode:'wrong'}),r);assert.equal(r.statusCode,403);});
   test(`${name}: sandbox checkout with the owner code passes the gate`,async()=>{const r=res();await handler(req({ownerCode:CODE}),r);assert.notEqual(r.statusCode,403);});
+  test(`${name}: owner code with surrounding whitespace passes the gate`,async()=>{const r=res();await handler(req({ownerCode:` ${CODE}\n`}),r);assert.notEqual(r.statusCode,403);});
   test(`${name}: live Paddle has no owner gate`,async()=>{process.env.PADDLE_ENVIRONMENT='production';const r=res();await handler(req({}),r);assert.notEqual(r.statusCode,403);});
   test(`${name}: no owner code configured keeps sandbox checkout closed`,async()=>{delete process.env.HSC_OWNER_CODE;const r=res();await handler(req({ownerCode:''}),r);assert.equal(r.statusCode,403);});
 }
