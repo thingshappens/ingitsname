@@ -56,7 +56,7 @@ def ensure_voicebox() -> None:
     # Voicebox's own output goes to a log file so a failed start can say why.
     log = open(VOICEBOX_LOG, "ab")
     VOICEBOX_PROCESS = subprocess.Popen(
-        [sys.executable, "-m", "backend.main", "--host", "127.0.0.1", "--port", "17493", "--data-dir", str(data_dir)],
+        [sys.executable, "-X", "faulthandler", "-m", "backend.main", "--host", "127.0.0.1", "--port", "17493", "--data-dir", str(data_dir)],
         cwd="/opt/voicebox",
         stdout=log,
         stderr=subprocess.STDOUT,
@@ -69,7 +69,7 @@ def ensure_voicebox() -> None:
         if VOICEBOX_PROCESS.poll() is not None:
             break
         time.sleep(1)
-    raise RuntimeError(f"Voicebox did not become ready (exit code {VOICEBOX_PROCESS.poll()}): {voicebox_log_tail()}")
+    raise RuntimeError(f"Voicebox did not become ready (exit code {VOICEBOX_PROCESS.poll()}; cpu {cpu_summary()}): {voicebox_log_tail()}")
 
 
 def voicebox_healthy() -> bool:
@@ -79,7 +79,19 @@ def voicebox_healthy() -> bool:
         return False
 
 
-def voicebox_log_tail(limit: int = 1500) -> str:
+def cpu_summary() -> str:
+    """CPU model and vector extensions, to explain an illegal-instruction (exit -4) crash."""
+    try:
+        info = Path("/proc/cpuinfo").read_text()
+        model = next((l.split(":", 1)[1].strip() for l in info.splitlines() if l.startswith("model name")), "?")
+        flags = next((l.split(":", 1)[1].split() for l in info.splitlines() if l.startswith("flags")), [])
+        wanted = ["avx", "avx2", "fma", "f16c", "avx512f", "avx512bw", "avx512vl", "avx512_vnni", "avx512_bf16", "amx_tile", "avx_vnni"]
+        return f"{model} | " + " ".join(f for f in wanted if f in flags)
+    except OSError:
+        return "?"
+
+
+def voicebox_log_tail(limit: int = 3000) -> str:
     try:
         data = Path(VOICEBOX_LOG).read_bytes()[-limit:]
         return data.decode("utf-8", "replace")
