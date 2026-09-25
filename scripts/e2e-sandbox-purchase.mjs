@@ -43,7 +43,14 @@ try{
     if(n>=5)break;await page.waitForTimeout(20000);
   }
   await shot(page,'6-ready');
-  const [dl]=await Promise.all([page.waitForEvent('download',{timeout:120000}),page.locator('#downloads button').last().click()]);
-  const path=await dl.path();const {statSync}=await import('node:fs');console.log('downloaded',dl.suggestedFilename(),statSync(path).size,'bytes');
+  const fs=await import('node:fs');
+  const grab=async(btn)=>{const [dl]=await Promise.all([page.waitForEvent('download',{timeout:120000}),btn.click({timeout:15000})]);const b=fs.readFileSync(await dl.path());return {name:dl.suggestedFilename(),b};};
+  const wav=await grab(page.locator('#downloads button').first());
+  console.log('wav:',wav.name,wav.b.length,'bytes, RIFF/WAVE header:',wav.b.subarray(0,4).toString()==='RIFF'&&wav.b.subarray(8,12).toString()==='WAVE');
+  const zip=await grab(page.locator('#downloads button').last());
+  const entries=(zip.b.toString('latin1').match(/HSC_TheEdit_[A-Za-z]+_\d+BPM\.wav/g)||[]);
+  console.log('zip:',zip.name,zip.b.length,'bytes, wav files:',[...new Set(entries)].length);
+  if(wav.b.subarray(0,4).toString()!=='RIFF'||new Set(entries).size!==4)throw new Error('downloads incomplete');
+  console.log('E2E OK');
 }catch(e){console.log('FAILED:',e.message.split('\n')[0]);await shot(page,'x-failure');process.exitCode=1;}
 finally{await browser.close();}
