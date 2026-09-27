@@ -17,7 +17,7 @@ function summary(){
   $('#summary-title').textContent='Ready for the set.';
   $('#plan-name').textContent=`${selectedVoiceName()} DJ Pack`;
   $('#price').innerHTML='HSC<small> PACK</small>';
-  $('#checkout').textContent='Get the files · $12 ↗';
+  $('#checkout').innerHTML='Get the files · <span data-paddle-price="the_edit">$12</span> ↗';if(window.hscApplyPrices)window.hscApplyPrices();
   $('#checkout').disabled=!config.enabled||busy;
   $('#feedback').textContent=!config.enabled?'Orders are not open yet.':'';
 }

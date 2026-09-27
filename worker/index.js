@@ -89,7 +89,15 @@ export default {
     }
     // Public Paddle.js config (client-side tokens are safe to expose by design).
     if (url.pathname === '/api/paddle-client') {
-      return new Response(JSON.stringify({ environment: String(env.PADDLE_ENVIRONMENT || '').trim().toLowerCase() === 'sandbox' ? 'sandbox' : 'production', token: env.PADDLE_CLIENT_TOKEN || null }), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+      // Never guess the environment: an unset or unknown value must not silently point at the wrong Paddle account.
+      const environment = String(env.PADDLE_ENVIRONMENT || '').trim().toLowerCase();
+      if (environment !== 'sandbox' && environment !== 'production') {
+        console.error(JSON.stringify({ event: 'paddle_environment_invalid' }));
+        return new Response(JSON.stringify({ error: 'PADDLE_ENVIRONMENT must be sandbox or production' }), { status: 503, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+      }
+      // Price IDs are public (they appear in every checkout); used for localized price previews.
+      const priceId = (v) => (typeof v === 'string' && /^pri_[A-Za-z0-9]+$/.test(v.trim()) ? v.trim() : null);
+      return new Response(JSON.stringify({ environment, token: env.PADDLE_CLIENT_TOKEN || null, prices: { the_edit: priceId(env.PADDLE_PRICE_THE_EDIT_4) } }), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
     }
     if (url.pathname.startsWith('/api/admin/')) return admin(request, env, url);
     const target = HOST_REDIRECT[url.hostname];

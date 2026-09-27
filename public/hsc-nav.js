@@ -72,20 +72,55 @@
     }
   }
 
-  // Paddle Billing sends buyers to our payment link with ?_ptxn=…; Paddle.js opens the checkout for it.
-  if (/[?&]_ptxn=/.test(window.location.search) && !window.__hscPaddle) {
-    window.__hscPaddle = true;
-    fetch('/api/paddle-client', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (c) {
-      if (!c || !c.token) return;
-      var s = document.createElement('script');
-      s.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
-      s.onload = function () { if (c.environment === 'sandbox') window.Paddle.Environment.set('sandbox'); window.Paddle.Initialize({ token: c.token, eventCallback: function (e) {
-        // After payment, close Paddle's success screen so the buyer sees their order and downloads underneath.
-        if (e && e.name === 'checkout.completed') setTimeout(function () { window.Paddle.Checkout.close(); }, 3000);
-      } }); };
-      document.head.appendChild(s);
+  // Paddle.js, loaded once per page: opens checkout for ?_ptxn=… links, and shows local-currency prices.
+  var paddleReady = null;
+  function loadPaddle() {
+    if (paddleReady) return paddleReady;
+    paddleReady = fetch('/api/paddle-client', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (c) {
+      if (!c || !c.token || (c.environment !== 'sandbox' && c.environment !== 'production')) throw new Error('Paddle is not configured');
+      return new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+        s.onerror = reject;
+        s.onload = function () {
+          if (c.environment === 'sandbox') window.Paddle.Environment.set('sandbox');
+          window.Paddle.Initialize({ token: c.token, eventCallback: function (e) {
+            // After payment, close Paddle's success screen so the buyer sees their order and downloads underneath.
+            if (e && e.name === 'checkout.completed') setTimeout(function () { window.Paddle.Checkout.close(); }, 3000);
+          } });
+          resolve(c);
+        };
+        document.head.appendChild(s);
+      });
+    });
+    return paddleReady;
+  }
+
+  if (/[?&]_ptxn=/.test(window.location.search)) loadPaddle().catch(function () {});
+
+  // Elements marked data-paddle-price="the_edit" show Paddle's own formatted total for the visitor's
+  // location (Paddle detects it from the IP). Shown exactly as Paddle returns it; the USD text in the
+  // page stays as the fallback if Paddle can't answer.
+  var localPrices = null;
+  function applyPrices() {
+    if (!localPrices) return;
+    var els = document.querySelectorAll('[data-paddle-price]');
+    for (var i = 0; i < els.length; i++) { var v = localPrices[els[i].getAttribute('data-paddle-price')]; if (v) els[i].textContent = v; }
+  }
+  window.hscApplyPrices = applyPrices;
+  function localizePrices() {
+    if (!document.querySelector('[data-paddle-price]')) return;
+    loadPaddle().then(function (c) {
+      var keys = Object.keys(c.prices || {}).filter(function (k) { return c.prices[k]; });
+      if (!keys.length) return;
+      return window.Paddle.PricePreview({ items: keys.map(function (k) { return { priceId: c.prices[k], quantity: 1 }; }) }).then(function (r) {
+        var items = (r && r.data && r.data.details && r.data.details.lineItems) || [], out = {};
+        keys.forEach(function (k) { var li = items.filter(function (x) { return x.price && x.price.id === c.prices[k]; })[0]; if (li && li.formattedTotals && li.formattedTotals.total) out[k] = li.formattedTotals.total; });
+        localPrices = out; applyPrices();
+      });
     }).catch(function () {});
   }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', localizePrices); else localizePrices();
 
   // Render immediately when the mount is already in the DOM (the script tag sits right after it),
   // so the header is part of the first paint instead of popping in at DOMContentLoaded.
