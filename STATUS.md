@@ -4,7 +4,7 @@ Last updated: 2026-09-27
 
 ## Nu
 
-- **Waiting for Paddle approval.** The live account returns `transaction_checkout_not_enabled` ("Checkouts aren't enabled… haven't fully completed the Paddle onboarding"). The owner has to finish onboarding in vendors.paddle.com: Home checklist, website approval for hautesoundcouture.com, default payment link `https://hautesoundcouture.com/edit/`. Until then, visitors who try to buy see "temporarily unavailable". No one can be charged.
+- **Waiting for Paddle approval** (still `transaction_checkout_not_enabled` at the check on 2026-09-27 22:35, after ~20 h of checks every 15 min). The live account returns `transaction_checkout_not_enabled` ("Checkouts aren't enabled… haven't fully completed the Paddle onboarding"). The owner has to finish onboarding in vendors.paddle.com: Home checklist, website approval for hautesoundcouture.com, default payment link `https://hautesoundcouture.com/edit/`. Until then, visitors who try to buy see "temporarily unavailable". No one can be charged.
 - **Check whether Paddle is enabled:** `gh workflow run set-secrets.yml -R thingshappens/ingitsname --ref edit-sandbox-diag` and read the log (`"id":"txn_…"` = enabled). Only `set-secrets.yml` can be dispatched, so it is reused for diagnostics on the `edit-sandbox-diag` branch.
 - Atelier charges through Paddle as of 2026-09-27 (`ATELIER_PAYMENT_PROVIDER=paddle`, live prices `pri_01m35pkx50y3pahraxy0qfn6c8` $12 and `pri_01m35q1n4q9tdmrrqewzcxqpw0` $39). It waits on the same Paddle approval as The Edit.
 
