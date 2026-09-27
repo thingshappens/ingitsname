@@ -97,7 +97,7 @@ export default {
       }
       // Price IDs are public (they appear in every checkout); used for localized price previews.
       const priceId = (v) => (typeof v === 'string' && /^pri_[A-Za-z0-9]+$/.test(v.trim()) ? v.trim() : null);
-      return new Response(JSON.stringify({ environment, token: env.PADDLE_CLIENT_TOKEN || null, prices: { the_edit: priceId(env.PADDLE_PRICE_THE_EDIT_4) } }), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+      return new Response(JSON.stringify({ environment, token: env.PADDLE_CLIENT_TOKEN || null, prices: { the_edit: priceId(env.PADDLE_PRICE_THE_EDIT_4), atelier_4: priceId(env.PADDLE_PRICE_ATELIER_4), atelier_pack: priceId(env.PADDLE_PRICE_ATELIER_PACK) } }), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
     }
     if (url.pathname.startsWith('/api/admin/')) return admin(request, env, url);
     const target = HOST_REDIRECT[url.hostname];
