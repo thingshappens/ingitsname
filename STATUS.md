@@ -15,9 +15,13 @@ Last updated: 2026-09-27
 - 2026-09-25 — "Hear cut" previews are public on the live site: 12 per visitor per hour, 120 per hour site-wide. They run on RunPod via the same `fulfil` job as paid orders.
 - 2026-09-25 — RunPod worker v6: `pedalboard` pinned to 0.9.20. 0.9.21+ Linux wheels contain AVX-512 and crash with SIGILL on AMD EPYC 7352 hosts (spotify/pedalboard#454).
 - 2026-09-25 — RunPod calls use `runsync` plus 4 s polling. Polling every 0.75 s hit Cloudflare's per-request subrequest limit.
+- 2026-09-27 — Local prices: The Edit's price on `/pricing/` and its buy button comes from `Paddle.PricePreview` (Paddle's `formattedTotals.total`, shown as-is; USD text as fallback). `/api/paddle-client` fails on purpose if `PADDLE_ENVIRONMENT` isn't `sandbox`/`production`. Paddle variables documented in `.env.example`. Atelier stays in USD until it charges through Paddle.
+- 2026-09-27 — Paddle's generic 3-tier subscription template was NOT used: HSC sells one-time custom products, so there's no Starter/Pro/Advanced, no monthly/yearly, and no direct "Subscribe" button (the customer configures the product first).
 - 2026-09-27 — Pricing page `/pricing/` (The Edit $12, Atelier $12 / $39), linked in the footer. The Edit's button shows "Get the files · $12".
 
 ## Backlog
+
+- Show kr/€ instead of $: add country-specific prices (overrides) to the price in Paddle. The site shows them automatically, no code needed.
 
 - After Paddle approval: open the live checkout, then have the owner do one real $12 purchase and refund it in Paddle.
 - Atelier live checkout: decide Paddle vs Stripe, set the live price IDs on the Worker, and test it.
