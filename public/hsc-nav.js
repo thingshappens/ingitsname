@@ -66,7 +66,7 @@
       var legal = document.createElement('nav');
       legal.className = 'hsc-legal';
       legal.setAttribute('aria-label', 'Legal');
-      legal.innerHTML = '<a href="https://hautesoundcouture.com/terms/">Terms</a><a href="https://hautesoundcouture.com/privacy/">Privacy</a><a href="https://hautesoundcouture.com/refunds/">Refunds</a>';
+      legal.innerHTML = '<a href="https://hautesoundcouture.com/pricing/">Pricing</a><a href="https://hautesoundcouture.com/terms/">Terms</a><a href="https://hautesoundcouture.com/privacy/">Privacy</a><a href="https://hautesoundcouture.com/refunds/">Refunds</a>';
       var place = function () { document.body.appendChild(legal); };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', place); else place();
     }
